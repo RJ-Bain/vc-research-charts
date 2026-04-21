@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VC Market Regime Study — Interactive Research Dashboard</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --text-primary: #1a1a1a;
+    --text-secondary: #6b6b6b;
+    --text-tertiary: #9a9a9a;
+    --border: rgba(0,0,0,0.08);
+    --surface: #fafaf8;
+    --callout-bg: #FEF3E2;
+    --callout-accent: #C9952B;
+    --callout-text: #854F0B;
+    --sig-bg: #E8F5ED;
+    --sig-text: #1A6B3A;
+    --marg-bg: #FEF3E2;
+    --marg-text: #854F0B;
+    --insig-bg: rgba(0,0,0,0.04);
+    --insig-text: #6b6b6b;
+    --pos: #1A6B3A;
+    --neg: #A32D2D;
+    --navbar-bg: rgba(255,255,255,0.92);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+  }
+  .page {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 32px 24px 80px;
+  }
+  .page-header {
+    margin-bottom: 40px;
+  }
+  .page-header h1 {
+    font-size: 28px;
+    font-weight: 500;
+    margin: 0 0 6px 0;
+  }
+  .page-header .deck {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.6;
+  }
+  nav.toc {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: var(--navbar-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 0.5px solid var(--border);
+    margin: 0 -24px 32px;
+    padding: 12px 24px;
+  }
+  nav.toc ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 8px;
+    font-size: 12px;
+  }
+  nav.toc li { display: flex; align-items: center; }
+  nav.toc a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    padding: 4px 10px;
+    border-radius: 999px;
+    transition: background-color 0.12s, color 0.12s;
+    white-space: nowrap;
+    border: 0.5px solid transparent;
+  }
+  nav.toc a:hover { background: var(--surface); color: var(--text-primary); border-color: var(--border); }
+  section { scroll-margin-top: 72px; margin-bottom: 72px; }
+  section h2 {
+    font-size: 20px;
+    font-weight: 500;
+    margin: 0 0 4px 0;
+  }
+  section .lead {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 0 0 24px 0;
+    line-height: 1.65;
+  }
+  .sec-num {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    margin: 0 0 4px 0;
+    font-weight: 500;
+  }
+
+  /* Regime filter chips */
+  .regime-filter {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 0 0 20px 0;
+    padding: 12px 14px;
+    background: var(--surface);
+    border-radius: 8px;
+    align-items: center;
+  }
+  .regime-filter .filter-label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-right: 4px;
+  }
+  .regime-filter label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-primary);
+    cursor: pointer;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 0.5px solid var(--border);
+    background: var(--bg);
+    transition: background 0.12s, border-color 0.12s;
+    user-select: none;
+  }
+  .regime-filter label:hover { border-color: var(--text-tertiary); }
+  .regime-filter input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 11px;
+    height: 11px;
+    border-radius: 2px;
+    border: 1px solid currentColor;
+    margin: 0;
+    cursor: pointer;
+    position: relative;
+    background: transparent;
+    flex-shrink: 0;
+  }
+  .regime-filter input[type="checkbox"]:checked {
+    background: currentColor;
+  }
+  .regime-filter input[type="checkbox"]:checked::after {
+    content: "";
+    position: absolute;
+    left: 2px;
+    top: 0px;
+    width: 3px;
+    height: 6px;
+    border: solid var(--bg);
+    border-width: 0 1.5px 1.5px 0;
+    transform: rotate(45deg);
+  }
+  .regime-filter .reset-btn {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 8px;
+    text-decoration: underline;
+    text-decoration-color: var(--text-tertiary);
+    text-underline-offset: 3px;
+    margin-left: auto;
+  }
+  .regime-filter .reset-btn:hover { color: var(--text-primary); }
+
+  /* Divergence list */
+  .divergence-list {
+    list-style: none;
+    padding: 0;
+    margin: 20px 0 0 0;
+  }
+  .divergence-list li {
+    font-size: 13px;
+    line-height: 1.7;
+    padding: 12px 0 12px 20px;
+    border-top: 0.5px solid var(--border);
+    position: relative;
+    color: var(--text-primary);
+  }
+  .divergence-list li:last-child { border-bottom: 0.5px solid var(--border); }
+  .divergence-list li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 22px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text-tertiary);
+  }
+  .divergence-list .div-header {
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-right: 8px;
+  }
+  .divergence-list .div-meta {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-left: 8px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Column/bar chart */
+  .stage-wrap { margin-bottom: 28px; }
+  .stage-label { font-size: 13px; font-weight: 500; color: var(--text-secondary); margin: 0 0 8px 48px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .chart-wrap { position: relative; width: 100%; height: 180px; }
+  .chart-wrap.tall { height: 360px; }
+
+  /* Legend chips */
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; margin: 20px 0 8px 48px; padding-top: 16px; border-top: 0.5px solid var(--border); }
+  .legend span { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-secondary); }
+  .legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; flex-shrink: 0; }
+
+  /* Line chart */
+  .line-legend { display: flex; gap: 20px; flex-wrap: wrap; margin: 0 0 12px 0; }
+  .line-legend span { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); }
+  .line-legend i { display: inline-block; width: 18px; height: 2px; flex-shrink: 0; }
+  .line-chart-wrap { position: relative; width: 100%; height: 360px; margin-bottom: 16px; }
+  .band-legend { display: flex; gap: 18px; flex-wrap: wrap; font-size: 11px; color: var(--text-tertiary); padding-top: 12px; border-top: 0.5px solid var(--border); }
+  .band-legend span { display: flex; align-items: center; gap: 6px; }
+  .band-legend i { width: 12px; height: 10px; border-radius: 2px; display: inline-block; flex-shrink: 0; }
+
+  /* Companies */
+  .count-line { font-size: 12px; color: var(--text-secondary); margin: 0 0 12px 0; }
+  .count-line strong { color: var(--text-primary); font-weight: 500; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    column-gap: 20px;
+    border-top: 0.5px solid var(--border);
+    border-bottom: 0.5px solid var(--border);
+    padding: 4px 0;
+  }
+  @media (max-width: 720px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 420px) { .grid { grid-template-columns: 1fr; } }
+  .co { display: flex; align-items: baseline; gap: 8px; font-size: 13px; padding: 7px 2px; border-bottom: 0.5px dotted var(--border); position: relative; cursor: default; }
+  .co:last-child { border-bottom: none; }
+  .co .num { font-size: 11px; color: var(--text-tertiary); font-variant-numeric: tabular-nums; min-width: 22px; }
+  .co .name { color: var(--text-primary); border-bottom: 0.5px dashed transparent; transition: border-color 0.15s; }
+  .co.has-data { cursor: pointer; }
+  .co.has-data .name { border-bottom-color: var(--text-tertiary); }
+  .co.has-data:hover .name { border-bottom-color: var(--text-primary); }
+
+  /* Tooltip */
+  .tooltip {
+    position: fixed;
+    z-index: 100;
+    background: var(--bg);
+    border: 0.5px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    min-width: 260px;
+    max-width: 340px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.12s;
+  }
+  .tooltip.visible { opacity: 1; pointer-events: auto; }
+  .tt-header { font-size: 13px; font-weight: 500; color: var(--text-primary); margin: 0 0 8px 0; padding-bottom: 6px; border-bottom: 0.5px solid var(--border); }
+  .tt-row { display: grid; grid-template-columns: 100px 1fr auto; gap: 10px; font-size: 12px; padding: 4px 0; font-variant-numeric: tabular-nums; }
+  .tt-row .tt-date { color: var(--text-tertiary); }
+  .tt-row .tt-stage { color: var(--text-primary); }
+  .tt-row .tt-size { color: var(--text-primary); font-weight: 500; text-align: right; }
+  .tt-empty { font-size: 12px; color: var(--text-tertiary); font-style: italic; padding: 4px 0; }
+  @media (hover: none) { .co.has-data .name { border-bottom-style: dotted; } }
+
+  /* Callout */
+  .callout {
+    display: grid;
+    grid-template-columns: 4px 1fr;
+    gap: 14px;
+    background: var(--callout-bg);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin: 20px 0 24px 0;
+  }
+  .callout-accent { background: var(--callout-accent); border-radius: 2px; }
+  .callout-label { font-size: 11px; font-weight: 500; color: var(--callout-text); letter-spacing: 0.04em; text-transform: uppercase; margin: 0 0 6px 0; }
+  .callout-text { font-size: 13px; line-height: 1.7; color: var(--text-primary); margin: 0; }
+
+  /* Sample construction */
+  .adj-list { list-style: none; padding: 0; margin: 0 0 20px 0; }
+  .adj-list li { font-size: 13px; line-height: 1.7; padding: 8px 0 8px 20px; position: relative; color: var(--text-primary); }
+  .adj-list li::before { content: ""; position: absolute; left: 0; top: 16px; width: 6px; height: 6px; border-radius: 50%; background: var(--text-tertiary); }
+  .adj-list strong { font-weight: 500; color: var(--text-primary); }
+  a { color: var(--text-primary); text-decoration: underline; text-decoration-color: var(--text-tertiary); text-underline-offset: 3px; text-decoration-thickness: 1px; transition: text-decoration-color 0.15s; }
+  a:hover { text-decoration-color: var(--text-primary); }
+
+  /* Scatter grid */
+  .scatter-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 32px; }
+  @media (max-width: 680px) { .scatter-grid { grid-template-columns: 1fr; } }
+  .scatter-section { margin-bottom: 0; min-width: 0; }
+  .scatter-lbl { font-size: 12px; font-weight: 500; color: var(--text-secondary); letter-spacing: 0.06em; text-transform: uppercase; margin: 0 0 8px 0; }
+  .scatter-wrap { position: relative; width: 100%; height: 220px; }
+  .scatter-legend { display: flex; gap: 20px; flex-wrap: wrap; font-size: 12px; color: var(--text-secondary); margin: 0 0 20px 0; padding: 12px 14px; background: rgba(0,0,0,0.02); border-radius: 8px; }
+  .scatter-legend span { display: flex; align-items: center; gap: 8px; }
+
+  /* Stats table */
+  .stats-sec { font-size: 11px; font-weight: 500; color: var(--text-secondary); margin: 1.4rem 0 10px 0; letter-spacing: 0.04em; text-transform: uppercase; }
+  .ol-list { font-size: 12px; color: var(--text-secondary); margin: 8px 0 0 0; padding: 0 0 0 1.2rem; line-height: 1.8; }
+  .ol-list li span { color: var(--text-primary); }
+  .table-wrap { overflow-x: auto; margin-top: 12px; }
+  table.stats {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    min-width: 900px;
+  }
+  table.stats th {
+    text-align: left;
+    font-weight: 500;
+    font-size: 11px;
+    color: var(--text-secondary);
+    padding: 8px 10px;
+    border-bottom: 0.5px solid var(--border);
+    white-space: nowrap;
+    background: var(--surface);
+  }
+  table.stats td {
+    padding: 9px 10px;
+    border-bottom: 0.5px solid var(--border);
+    color: var(--text-primary);
+    white-space: nowrap;
+    font-size: 12px;
+  }
+  table.stats tr:last-child td { border-bottom: none; }
+  .divider-col { border-right: 0.5px solid var(--border); }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 500; }
+  .sig { background: var(--sig-bg); color: var(--sig-text); }
+  .marginal { background: var(--marg-bg); color: var(--marg-text); }
+  .insig { background: var(--insig-bg); color: var(--insig-text); }
+  .p-sig { color: var(--sig-text); font-weight: 500; }
+  .p-marg { color: var(--marg-text); font-weight: 500; }
+  .pos { color: var(--pos); }
+  .neg { color: var(--neg); }
+  .stage-name { font-weight: 500; }
+  .note { font-size: 11px; color: var(--text-tertiary); margin-top: 20px; line-height: 1.7; padding-top: 20px; border-top: 0.5px solid var(--border); }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a1a;
+      --text-primary: #f5f5f5;
+      --text-secondary: #a8a8a8;
+      --text-tertiary: #6b6b6b;
+      --border: rgba(255,255,255,0.1);
+      --surface: #242424;
+      --callout-bg: rgba(201,149,43,0.14);
+      --callout-accent: #D4A05A;
+      --callout-text: #E5B870;
+      --sig-bg: rgba(26,107,58,0.2);
+      --sig-text: #6ABA87;
+      --marg-bg: rgba(133,79,11,0.2);
+      --marg-text: #D4A05A;
+      --insig-bg: rgba(255,255,255,0.05);
+      --insig-text: #a8a8a8;
+      --pos: #6ABA87;
+      --neg: #E07777;
+      --navbar-bg: rgba(26,26,26,0.92);
+    }
+    .scatter-legend { background: rgba(255,255,255,0.04); }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="page-header">
+    <h1>VC market regime study</h1>
+    <p class="deck">Measuring hot and cold fundraising environments by funding stage, and correlating market temperature with the quarterly flow of dollars into companies that later achieved $5B+ outcomes. 2011–2026.</p>
+  </header>
+
+  <nav class="toc" aria-label="Section navigation">
+    <ol>
+      <li><a href="#s1">1. Deployment by stage</a></li>
+      <li><a href="#s2">2. Composite scores over time</a></li>
+      <li><a href="#s3">3. Sample companies</a></li>
+      <li><a href="#s4">4. Outcome dollars by stage</a></li>
+      <li><a href="#s5">5. Correlation scatter</a></li>
+      <li><a href="#s6">6. Statistical results</a></li>
+    </ol>
+  </nav>
+
+  <!-- SECTION 1 -->
+  <section id="s1">
+    <p class="sec-num">Section 1</p>
+    <h2>US VC deployment by stage, color-coded by market regime</h2>
+    <p class="lead">Quarterly US VC deployment ($B) for Seed through Series C, color-coded by stage-specific composite regime score (equally weighted HP-filter and YoY growth z scores).</p>
+
+    <div class="regime-filter" id="regime-filter" role="group" aria-label="Filter bars by regime">
+      <span class="filter-label">Highlight</span>
+      <label style="color:#B03030;"><input type="checkbox" data-regime="Extreme Hot" checked>Extreme Hot</label>
+      <label style="color:#D4722A;"><input type="checkbox" data-regime="Hot" checked>Hot</label>
+      <label style="color:#888780;"><input type="checkbox" data-regime="Neutral" checked>Neutral</label>
+      <label style="color:#3A7BBF;"><input type="checkbox" data-regime="Cold" checked>Cold</label>
+      <label style="color:#1A4E7A;"><input type="checkbox" data-regime="Extreme Cold" checked>Extreme Cold</label>
+      <button class="reset-btn" id="reset-filter" type="button">Show all</button>
+    </div>
+
+    <div id="deploy-charts"></div>
+
+    <div class="legend">
+      <span><i style="background:#B03030"></i>Extreme Hot (z ≥ +1.5)</span>
+      <span><i style="background:#D4722A"></i>Hot (+0.5 to +1.5)</span>
+      <span><i style="background:#888780"></i>Neutral (−0.5 to +0.5)</span>
+      <span><i style="background:#3A7BBF"></i>Cold (−1.5 to −0.5)</span>
+      <span><i style="background:#1A4E7A"></i>Extreme Cold (z ≤ −1.5)</span>
+    </div>
+  </section>
+
+  <!-- SECTION 2 -->
+  <section id="s2">
+    <p class="sec-num">Section 2</p>
+    <h2>Stage composite scores over time</h2>
+    <p class="lead">Quarterly composite regime score for each stage, overlaid on one axis. Faint horizontal bands show the regime thresholds.</p>
+
+    <div class="line-legend">
+      <span><i style="background:#1A6B3A"></i>Seed</span>
+      <span><i style="background:#D4722A"></i>Series A</span>
+      <span><i style="background:#7C3AED"></i>Series B</span>
+      <span><i style="background:#0891B2"></i>Series C</span>
+    </div>
+
+    <div class="line-chart-wrap">
+      <canvas id="line-chart" role="img" aria-label="Line chart showing composite regime scores over time for all four stages">Composite regime scores 2011–2026 by stage.</canvas>
+    </div>
+
+    <div class="band-legend">
+      <span><i style="background:rgba(176,48,48,0.08)"></i>Extreme Hot zone</span>
+      <span><i style="background:rgba(212,114,42,0.08)"></i>Hot zone</span>
+      <span><i style="background:rgba(136,135,128,0.06)"></i>Neutral zone</span>
+      <span><i style="background:rgba(58,123,191,0.08)"></i>Cold zone</span>
+      <span><i style="background:rgba(26,78,122,0.08)"></i>Extreme Cold zone</span>
+    </div>
+
+    <div class="stats-sec" style="margin-top: 32px;">Top three points of stage divergence</div>
+    <p style="font-size:13px; color:var(--text-secondary); margin:0 0 4px 0; line-height:1.65;">Quarters ranked by the spread between the hottest and coldest stage composite scores — moments when the funding stack was moving out of lockstep.</p>
+    <ul class="divergence-list">
+      <li>
+        <span class="div-header">Q1 2022 — Seed alone in Extreme Hot.</span>
+        Seed registered +3.11 (its highest reading ever) while Series A and Series B were merely Hot (+1.17 and +0.95) and Series C was Neutral (+0.49). Seed deployment was nearly two full standard deviations more extreme than the rest of the funding stack in the same quarter. This captures the well-known lag in Seed deployment during the 2021–2022 cycle: the proliferation of pre-seed and solo-GP funds kept flooding the earliest stage with capital well after later stages had already begun their correction.
+        <span class="div-meta">z-score range: 2.62</span>
+      </li>
+      <li>
+        <span class="div-header">Q3 2021 — Series A overheats beyond an already-hot market.</span>
+        Series A hit +3.74, 1.15 standard deviations above the next-closest stage (Series B at +2.59) and more than 2 standard deviations above Seed (+1.34). This is the single highest regime reading for any stage in the entire dataset. Series A had the most headroom for valuation inflation in the 2021 boom: unlike Seed (constrained by round sizes) or Series C (constrained by viable late-stage company count), Series A saw both round sizes and valuations expand simultaneously.
+        <span class="div-meta">z-score range: 2.40</span>
+      </li>
+      <li>
+        <span class="div-header">Q1 2012 — Seed hot while later stages were cold.</span>
+        Seed registered Hot at +1.27 while Series B was Cold at −1.12 and Series C was Cold at −0.69, with Series A near neutral (+0.38). This quarter is one of only two in the entire dataset where Seed moved in the opposite regime direction from the rest of the funding stack. It reflects the post-GFC micro-VC formation wave: Seed activity expanded rapidly 2–3 years ahead of institutional Series A/B/C deployment returning to growth.
+        <span class="div-meta">z-score range: 2.39</span>
+      </li>
+    </ul>
+  </section>
+
+  <!-- SECTION 3 -->
+  <section id="s3">
+    <p class="sec-num">Section 3</p>
+    <h2>Sample companies</h2>
+    <p class="lead">$5B+ outcome universe used in the VC market regime study. Hover any name to see its complete funding round history sorted by date.</p>
+
+    <p class="count-line"><strong id="count">100</strong> companies, listed alphabetically.</p>
+    <div class="grid" id="company-grid"></div>
+
+    <div class="stats-sec" style="margin-top: 2.5rem;">Sample construction</div>
+    <p style="font-size:13px; line-height:1.7; margin: 0 0 12px 0;">The sample is based on <a href="https://docs.google.com/spreadsheets/d/1iibGnQFvL5zB9o8bwGTA5uQYmqGWBviW7eK_FH0LMW0/edit?gid=0#gid=0" target="_blank" rel="noopener"><em>Cole Rotman's published list of $5B+ Series A outcomes</em></a>, with several modifications:</p>
+
+    <ul class="adj-list">
+      <li><strong>Excluded:</strong> Any non-US companies on the original list (to maintain consistency with the US VC deployment dataset used as the independent variable); Waymo and xAI (whose deal dynamics don't align with typical Series A/B/C rounds); and io (which didn't have traditional venture funding rounds before being acquired by OpenAI).</li>
+      <li><strong>Added:</strong> Solana and Crusoe. Both meet the $5B+ outcome threshold and followed conventional early-stage fundraising paths consistent with the rest of the sample.</li>
+    </ul>
+
+    <div class="callout">
+      <div class="callout-accent"></div>
+      <div>
+        <p class="callout-label">Data source note</p>
+        <p class="callout-text">Funding-round data for all companies was sourced from Crunchbase. Where Crunchbase classifications are imperfect, we generally deferred to them anyway to maintain consistency with the US VC deployment dataset used as the independent variable (which is itself built from the same Crunchbase taxonomy). Exceptions: <strong>Solana</strong> and <strong>OpenAI</strong> were reconstructed from primary and secondary sources because the Crunchbase funding histories were materially inaccurate; and <strong>FalconX's Series A, Bilt's Series A, Kalshi's Series B, and Lyra Health's Series B</strong> were manually re-categorized due to individual round misclassifications in Crunchbase.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 4 -->
+  <section id="s4">
+    <p class="sec-num">Section 4</p>
+    <h2>$5B+ outcome dollars by stage, regime-colored</h2>
+    <p class="lead">Quarterly dollars invested in sampled $5B+ outcome companies ($M), color-coded by the same stage-specific regime classifications used in Section 1. Each bar is stacked by individual round — hover any segment to see the company, round label, date, and amount. Bars above each stage's Tukey fence are rendered at reduced opacity so the underlying regime pattern is easier to read.</p>
+
+    <div id="outcome-charts"></div>
+
+    <div class="legend">
+      <span><i style="background:#B03030"></i>Extreme Hot</span>
+      <span><i style="background:#D4722A"></i>Hot</span>
+      <span><i style="background:#888780"></i>Neutral</span>
+      <span><i style="background:#3A7BBF"></i>Cold</span>
+      <span><i style="background:#1A4E7A"></i>Extreme Cold</span>
+    </div>
+  </section>
+
+  <!-- SECTION 5 -->
+  <section id="s5">
+    <p class="sec-num">Section 5</p>
+    <h2>Composite score vs. $5B+ outcome dollars</h2>
+    <p class="lead">Scatter plot for each stage showing the relationship between composite regime score (x-axis) and outcome dollars invested ($M, y-axis). Tukey-fence outliers shown as hollow circles.</p>
+
+    <div class="scatter-legend">
+      <span><span style="width:11px;height:11px;border-radius:50%;background:#185FA5;opacity:.6;display:inline-block"></span>Ordinary quarters</span>
+      <span><span style="width:11px;height:11px;border-radius:50%;border:1.8px solid #185FA5;background:transparent;display:inline-block"></span>Tukey-fence outliers</span>
+      <span><span style="width:20px;height:0;border-top:1.8px dashed #185FA5;display:inline-block"></span>Linear trendline (all points)</span>
+    </div>
+
+    <div class="scatter-grid" id="scatter-grid"></div>
+  </section>
+
+  <!-- SECTION 6 -->
+  <section id="s6">
+    <p class="sec-num">Section 6</p>
+    <h2>Correlation statistics</h2>
+    <p class="lead">Full sample versus trimmed (Tukey-fence outliers removed), with both Pearson r and Spearman ρ reported for each stage. Spearman is rank-based and inherently robust to outliers; the "full vs. trimmed" Pearson comparison tests whether a few extreme points are driving or suppressing the observed linear relationship.</p>
+
+    <div class="stats-sec">Tukey-fence outliers excluded in trimmed analysis</div>
+    <ul class="ol-list" id="outlier-list"></ul>
+
+    <div class="stats-sec" style="margin-top: 28px;">Correlation statistics</div>
+
+    <div class="table-wrap">
+      <table class="stats">
+        <thead>
+          <tr>
+            <th rowspan="2">Stage</th>
+            <th colspan="6" style="text-align: center; border-right: 0.5px solid var(--border);">Full sample</th>
+            <th colspan="6" style="text-align: center;">Trimmed (outliers removed)</th>
+          </tr>
+          <tr>
+            <th>n</th>
+            <th>Pearson r</th>
+            <th>p</th>
+            <th>Spearman ρ</th>
+            <th>p</th>
+            <th class="divider-col">Sig.</th>
+            <th>n</th>
+            <th>Pearson r</th>
+            <th>p</th>
+            <th>Spearman ρ</th>
+            <th>p</th>
+            <th>Sig.</th>
+          </tr>
+        </thead>
+        <tbody id="stats-tbody"></tbody>
+      </table>
+    </div>
+
+    <p class="note">Significance threshold: p &lt; 0.05 (two-tailed); marginal = 0.05 ≤ p &lt; 0.10. Significance badges in each half of the table summarize the stricter of Pearson and Spearman in that half — i.e., if either test is significant at p &lt; 0.05 the stage is flagged significant in that column.</p>
+  </section>
+
+</div>
+
+<div class="tooltip" id="tooltip" role="tooltip"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const DATA = {"deploy":{"Seed":[{"period":"2011 Q1","deploy_b":0.24,"regime":"Neutral","z":-0.11},{"period":"2011 Q2","deploy_b":0.25,"regime":"Neutral","z":-0.01},{"period":"2011 Q3","deploy_b":0.31,"regime":"Hot","z":1.26},{"period":"2011 Q4","deploy_b":0.39,"regime":"Hot","z":1.49},{"period":"2012 Q1","deploy_b":0.45,"regime":"Hot","z":1.27},{"period":"2012 Q2","deploy_b":0.45,"regime":"Hot","z":0.97},{"period":"2012 Q3","deploy_b":0.44,"regime":"Neutral","z":0.07},{"period":"2012 Q4","deploy_b":0.46,"regime":"Neutral","z":-0.37},{"period":"2013 Q1","deploy_b":0.65,"regime":"Hot","z":0.71},{"period":"2013 Q2","deploy_b":0.73,"regime":"Hot","z":1.08},{"period":"2013 Q3","deploy_b":0.79,"regime":"Hot","z":1.32},{"period":"2013 Q4","deploy_b":0.73,"regime":"Hot","z":0.59},{"period":"2014 Q1","deploy_b":0.83,"regime":"Neutral","z":0.34},{"period":"2014 Q2","deploy_b":0.98,"regime":"Hot","z":0.7},{"period":"2014 Q3","deploy_b":0.92,"regime":"Neutral","z":0.09},{"period":"2014 Q4","deploy_b":0.88,"regime":"Neutral","z":-0.12},{"period":"2015 Q1","deploy_b":1.1,"regime":"Neutral","z":0.5},{"period":"2015 Q2","deploy_b":1.16,"regime":"Neutral","z":0.33},{"period":"2015 Q3","deploy_b":1.04,"regime":"Neutral","z":-0.18},{"period":"2015 Q4","deploy_b":1.04,"regime":"Neutral","z":-0.25},{"period":"2016 Q1","deploy_b":1.27,"regime":"Neutral","z":0.15},{"period":"2016 Q2","deploy_b":1.03,"regime":"Cold","z":-0.94},{"period":"2016 Q3","deploy_b":1.02,"regime":"Cold","z":-0.95},{"period":"2016 Q4","deploy_b":1.15,"regime":"Cold","z":-0.55},{"period":"2017 Q1","deploy_b":1.23,"regime":"Cold","z":-0.66},{"period":"2017 Q2","deploy_b":1.25,"regime":"Neutral","z":-0.38},{"period":"2017 Q3","deploy_b":1.29,"regime":"Neutral","z":-0.37},{"period":"2017 Q4","deploy_b":1.42,"regime":"Neutral","z":-0.23},{"period":"2018 Q1","deploy_b":1.76,"regime":"Hot","z":0.52},{"period":"2018 Q2","deploy_b":1.7,"regime":"Neutral","z":0.2},{"period":"2018 Q3","deploy_b":1.46,"regime":"Cold","z":-0.68},{"period":"2018 Q4","deploy_b":1.52,"regime":"Cold","z":-0.8},{"period":"2019 Q1","deploy_b":1.74,"regime":"Cold","z":-0.65},{"period":"2019 Q2","deploy_b":1.71,"regime":"Cold","z":-0.83},{"period":"2019 Q3","deploy_b":1.83,"regime":"Neutral","z":-0.41},{"period":"2019 Q4","deploy_b":2.04,"regime":"Neutral","z":-0.11},{"period":"2020 Q1","deploy_b":2.01,"regime":"Cold","z":-0.56},{"period":"2020 Q2","deploy_b":1.79,"regime":"Cold","z":-1.17},{"period":"2020 Q3","deploy_b":2.16,"regime":"Cold","z":-0.6},{"period":"2020 Q4","deploy_b":2.55,"regime":"Neutral","z":-0.17},{"period":"2021 Q1","deploy_b":3.14,"regime":"Hot","z":0.73},{"period":"2021 Q2","deploy_b":3.76,"regime":"Extreme Hot","z":1.89},{"period":"2021 Q3","deploy_b":3.83,"regime":"Hot","z":1.34},{"period":"2021 Q4","deploy_b":4.43,"regime":"Extreme Hot","z":1.6},{"period":"2022 Q1","deploy_b":6.55,"regime":"Extreme Hot","z":3.11},{"period":"2022 Q2","deploy_b":4.5,"regime":"Hot","z":0.69},{"period":"2022 Q3","deploy_b":3.89,"regime":"Neutral","z":-0.06},{"period":"2022 Q4","deploy_b":3.57,"regime":"Cold","z":-0.68},{"period":"2023 Q1","deploy_b":3.44,"regime":"Cold","z":-1.24},{"period":"2023 Q2","deploy_b":3.17,"regime":"Cold","z":-1.26},{"period":"2023 Q3","deploy_b":3.28,"regime":"Cold","z":-1.01},{"period":"2023 Q4","deploy_b":3.36,"regime":"Cold","z":-0.84},{"period":"2024 Q1","deploy_b":3.52,"regime":"Cold","z":-0.63},{"period":"2024 Q2","deploy_b":4.2,"regime":"Neutral","z":0.27},{"period":"2024 Q3","deploy_b":3.29,"regime":"Cold","z":-0.92},{"period":"2024 Q4","deploy_b":3.38,"regime":"Cold","z":-0.87},{"period":"2025 Q1","deploy_b":3.64,"regime":"Cold","z":-0.66},{"period":"2025 Q2","deploy_b":5.72,"regime":"Hot","z":1.06},{"period":"2025 Q3","deploy_b":4.29,"regime":"Neutral","z":0.14},{"period":"2025 Q4","deploy_b":4.15,"regime":"Neutral","z":-0.09},{"period":"2026 Q1","deploy_b":3.25,"regime":"Cold","z":-1.29}],"Series A":[{"period":"2011 Q1","deploy_b":1.09,"regime":"Neutral","z":-0.01},{"period":"2011 Q2","deploy_b":1.39,"regime":"Hot","z":0.56},{"period":"2011 Q3","deploy_b":1.25,"regime":"Neutral","z":0.22},{"period":"2011 Q4","deploy_b":1.43,"regime":"Hot","z":0.78},{"period":"2012 Q1","deploy_b":1.51,"regime":"Neutral","z":0.38},{"period":"2012 Q2","deploy_b":1.53,"regime":"Neutral","z":-0.02},{"period":"2012 Q3","deploy_b":1.32,"regime":"Cold","z":-0.53},{"period":"2012 Q4","deploy_b":1.3,"regime":"Cold","z":-0.86},{"period":"2013 Q1","deploy_b":1.59,"regime":"Neutral","z":-0.35},{"period":"2013 Q2","deploy_b":2.09,"regime":"Neutral","z":0.49},{"period":"2013 Q3","deploy_b":1.75,"regime":"Neutral","z":-0.07},{"period":"2013 Q4","deploy_b":2.13,"regime":"Hot","z":0.62},{"period":"2014 Q1","deploy_b":2.16,"regime":"Neutral","z":0.21},{"period":"2014 Q2","deploy_b":3.05,"regime":"Hot","z":1.0},{"period":"2014 Q3","deploy_b":2.15,"regime":"Neutral","z":-0.15},{"period":"2014 Q4","deploy_b":2.35,"regime":"Neutral","z":-0.22},{"period":"2015 Q1","deploy_b":2.54,"regime":"Neutral","z":-0.06},{"period":"2015 Q2","deploy_b":3.68,"regime":"Hot","z":0.71},{"period":"2015 Q3","deploy_b":2.95,"regime":"Neutral","z":0.29},{"period":"2015 Q4","deploy_b":3.03,"regime":"Neutral","z":0.17},{"period":"2016 Q1","deploy_b":3.3,"regime":"Neutral","z":0.27},{"period":"2016 Q2","deploy_b":3.07,"regime":"Cold","z":-0.52},{"period":"2016 Q3","deploy_b":2.72,"regime":"Cold","z":-0.79},{"period":"2016 Q4","deploy_b":2.9,"regime":"Cold","z":-0.71},{"period":"2017 Q1","deploy_b":3.18,"regime":"Cold","z":-0.59},{"period":"2017 Q2","deploy_b":3.32,"regime":"Neutral","z":-0.47},{"period":"2017 Q3","deploy_b":3.56,"regime":"Neutral","z":-0.16},{"period":"2017 Q4","deploy_b":3.41,"regime":"Cold","z":-0.5},{"period":"2018 Q1","deploy_b":4.93,"regime":"Hot","z":0.64},{"period":"2018 Q2","deploy_b":5.13,"regime":"Hot","z":0.62},{"period":"2018 Q3","deploy_b":4.32,"regime":"Neutral","z":-0.25},{"period":"2018 Q4","deploy_b":5.09,"regime":"Neutral","z":0.33},{"period":"2019 Q1","deploy_b":5.98,"regime":"Neutral","z":0.27},{"period":"2019 Q2","deploy_b":5.04,"regime":"Neutral","z":-0.48},{"period":"2019 Q3","deploy_b":5.13,"regime":"Neutral","z":-0.3},{"period":"2019 Q4","deploy_b":5.08,"regime":"Cold","z":-0.64},{"period":"2020 Q1","deploy_b":4.48,"regime":"Cold","z":-1.3},{"period":"2020 Q2","deploy_b":5.97,"regime":"Neutral","z":-0.25},{"period":"2020 Q3","deploy_b":4.7,"regime":"Cold","z":-1.19},{"period":"2020 Q4","deploy_b":7.43,"regime":"Neutral","z":0.39},{"period":"2021 Q1","deploy_b":9.21,"regime":"Hot","z":1.48},{"period":"2021 Q2","deploy_b":13.39,"regime":"Extreme Hot","z":2.47},{"period":"2021 Q3","deploy_b":14.96,"regime":"Extreme Hot","z":3.74},{"period":"2021 Q4","deploy_b":15.02,"regime":"Extreme Hot","z":2.39},{"period":"2022 Q1","deploy_b":12.4,"regime":"Hot","z":1.16},{"period":"2022 Q2","deploy_b":10.05,"regime":"Neutral","z":0.0},{"period":"2022 Q3","deploy_b":9.74,"regime":"Neutral","z":-0.19},{"period":"2022 Q4","deploy_b":6.77,"regime":"Cold","z":-1.23},{"period":"2023 Q1","deploy_b":6.44,"regime":"Cold","z":-1.25},{"period":"2023 Q2","deploy_b":5.78,"regime":"Cold","z":-1.42},{"period":"2023 Q3","deploy_b":4.55,"regime":"Extreme Cold","z":-2.07},{"period":"2023 Q4","deploy_b":5.61,"regime":"Cold","z":-1.17},{"period":"2024 Q1","deploy_b":6.38,"regime":"Cold","z":-0.67},{"period":"2024 Q2","deploy_b":8.69,"regime":"Hot","z":0.62},{"period":"2024 Q3","deploy_b":7.0,"regime":"Neutral","z":0.19},{"period":"2024 Q4","deploy_b":7.21,"regime":"Neutral","z":-0.02},{"period":"2025 Q1","deploy_b":6.84,"regime":"Neutral","z":-0.37},{"period":"2025 Q2","deploy_b":6.83,"regime":"Cold","z":-0.69},{"period":"2025 Q3","deploy_b":7.38,"regime":"Neutral","z":-0.2},{"period":"2025 Q4","deploy_b":8.15,"regime":"Neutral","z":0.12},{"period":"2026 Q1","deploy_b":8.12,"regime":"Neutral","z":0.19}],"Series B":[{"period":"2011 Q1","deploy_b":1.41,"regime":"Neutral","z":-0.44},{"period":"2011 Q2","deploy_b":1.66,"regime":"Neutral","z":-0.01},{"period":"2011 Q3","deploy_b":1.95,"regime":"Hot","z":0.65},{"period":"2011 Q4","deploy_b":1.66,"regime":"Neutral","z":0.5},{"period":"2012 Q1","deploy_b":1.11,"regime":"Cold","z":-1.12},{"period":"2012 Q2","deploy_b":1.46,"regime":"Cold","z":-0.59},{"period":"2012 Q3","deploy_b":1.51,"regime":"Cold","z":-0.72},{"period":"2012 Q4","deploy_b":1.44,"regime":"Cold","z":-0.78},{"period":"2013 Q1","deploy_b":1.45,"regime":"Neutral","z":-0.37},{"period":"2013 Q2","deploy_b":1.72,"regime":"Neutral","z":-0.28},{"period":"2013 Q3","deploy_b":1.7,"regime":"Neutral","z":-0.44},{"period":"2013 Q4","deploy_b":2.1,"regime":"Neutral","z":0.19},{"period":"2014 Q1","deploy_b":2.27,"regime":"Neutral","z":0.36},{"period":"2014 Q2","deploy_b":3.26,"regime":"Hot","z":1.26},{"period":"2014 Q3","deploy_b":2.71,"regime":"Hot","z":0.53},{"period":"2014 Q4","deploy_b":3.26,"regime":"Hot","z":0.73},{"period":"2015 Q1","deploy_b":3.52,"regime":"Hot","z":0.77},{"period":"2015 Q2","deploy_b":4.16,"regime":"Hot","z":0.69},{"period":"2015 Q3","deploy_b":4.17,"regime":"Hot","z":0.89},{"period":"2015 Q4","deploy_b":3.58,"regime":"Neutral","z":0.08},{"period":"2016 Q1","deploy_b":2.99,"regime":"Cold","z":-0.58},{"period":"2016 Q2","deploy_b":3.29,"regime":"Cold","z":-0.55},{"period":"2016 Q3","deploy_b":3.08,"regime":"Cold","z":-0.8},{"period":"2016 Q4","deploy_b":2.34,"regime":"Cold","z":-1.45},{"period":"2017 Q1","deploy_b":4.2,"regime":"Neutral","z":0.29},{"period":"2017 Q2","deploy_b":3.56,"regime":"Neutral","z":-0.42},{"period":"2017 Q3","deploy_b":4.42,"regime":"Neutral","z":0.24},{"period":"2017 Q4","deploy_b":3.87,"regime":"Neutral","z":0.16},{"period":"2018 Q1","deploy_b":4.56,"regime":"Neutral","z":-0.24},{"period":"2018 Q2","deploy_b":5.05,"regime":"Neutral","z":0.21},{"period":"2018 Q3","deploy_b":5.23,"regime":"Neutral","z":-0.06},{"period":"2018 Q4","deploy_b":5.61,"regime":"Neutral","z":0.27},{"period":"2019 Q1","deploy_b":6.06,"regime":"Neutral","z":0.19},{"period":"2019 Q2","deploy_b":6.86,"regime":"Neutral","z":0.37},{"period":"2019 Q3","deploy_b":4.6,"regime":"Cold","z":-0.93},{"period":"2019 Q4","deploy_b":4.62,"regime":"Cold","z":-1.05},{"period":"2020 Q1","deploy_b":7.74,"regime":"Neutral","z":0.27},{"period":"2020 Q2","deploy_b":5.55,"regime":"Cold","z":-0.88},{"period":"2020 Q3","deploy_b":5.99,"regime":"Neutral","z":-0.28},{"period":"2020 Q4","deploy_b":7.61,"regime":"Neutral","z":0.46},{"period":"2021 Q1","deploy_b":12.03,"regime":"Hot","z":1.12},{"period":"2021 Q2","deploy_b":13.74,"regime":"Extreme Hot","z":2.3},{"period":"2021 Q3","deploy_b":15.46,"regime":"Extreme Hot","z":2.59},{"period":"2021 Q4","deploy_b":18.57,"regime":"Extreme Hot","z":2.76},{"period":"2022 Q1","deploy_b":14.19,"regime":"Hot","z":0.95},{"period":"2022 Q2","deploy_b":13.64,"regime":"Hot","z":0.69},{"period":"2022 Q3","deploy_b":7.13,"regime":"Cold","z":-1.0},{"period":"2022 Q4","deploy_b":6.3,"regime":"Cold","z":-1.32},{"period":"2023 Q1","deploy_b":6.07,"regime":"Cold","z":-1.26},{"period":"2023 Q2","deploy_b":5.66,"regime":"Cold","z":-1.37},{"period":"2023 Q3","deploy_b":5.33,"regime":"Cold","z":-1.09},{"period":"2023 Q4","deploy_b":4.12,"regime":"Extreme Cold","z":-1.62},{"period":"2024 Q1","deploy_b":6.06,"regime":"Cold","z":-0.54},{"period":"2024 Q2","deploy_b":6.11,"regime":"Neutral","z":-0.42},{"period":"2024 Q3","deploy_b":5.12,"regime":"Cold","z":-0.84},{"period":"2024 Q4","deploy_b":5.52,"regime":"Neutral","z":-0.29},{"period":"2025 Q1","deploy_b":6.62,"regime":"Neutral","z":-0.21},{"period":"2025 Q2","deploy_b":6.5,"regime":"Neutral","z":-0.26},{"period":"2025 Q3","deploy_b":7.83,"regime":"Hot","z":0.58},{"period":"2025 Q4","deploy_b":11.67,"regime":"Extreme Hot","z":1.91},{"period":"2026 Q1","deploy_b":6.72,"regime":"Neutral","z":-0.22}],"Series C":[{"period":"2011 Q1","deploy_b":1.9,"regime":"Extreme Hot","z":1.54},{"period":"2011 Q2","deploy_b":1.17,"regime":"Cold","z":-0.59},{"period":"2011 Q3","deploy_b":1.38,"regime":"Hot","z":0.63},{"period":"2011 Q4","deploy_b":1.08,"regime":"Cold","z":-0.73},{"period":"2012 Q1","deploy_b":1.25,"regime":"Cold","z":-0.69},{"period":"2012 Q2","deploy_b":1.64,"regime":"Neutral","z":0.4},{"period":"2012 Q3","deploy_b":1.35,"regime":"Neutral","z":-0.36},{"period":"2012 Q4","deploy_b":1.24,"regime":"Neutral","z":-0.37},{"period":"2013 Q1","deploy_b":1.09,"regime":"Cold","z":-0.9},{"period":"2013 Q2","deploy_b":1.26,"regime":"Cold","z":-0.84},{"period":"2013 Q3","deploy_b":1.9,"regime":"Neutral","z":0.37},{"period":"2013 Q4","deploy_b":1.71,"regime":"Neutral","z":0.11},{"period":"2014 Q1","deploy_b":2.16,"regime":"Hot","z":0.99},{"period":"2014 Q2","deploy_b":2.74,"regime":"Hot","z":1.48},{"period":"2014 Q3","deploy_b":1.88,"regime":"Neutral","z":-0.3},{"period":"2014 Q4","deploy_b":1.77,"regime":"Neutral","z":-0.42},{"period":"2015 Q1","deploy_b":2.47,"regime":"Neutral","z":0.15},{"period":"2015 Q2","deploy_b":2.53,"regime":"Neutral","z":-0.09},{"period":"2015 Q3","deploy_b":2.62,"regime":"Neutral","z":0.35},{"period":"2015 Q4","deploy_b":2.03,"regime":"Neutral","z":-0.34},{"period":"2016 Q1","deploy_b":3.74,"regime":"Hot","z":0.89},{"period":"2016 Q2","deploy_b":2.99,"regime":"Neutral","z":0.16},{"period":"2016 Q3","deploy_b":2.25,"regime":"Cold","z":-0.66},{"period":"2016 Q4","deploy_b":1.48,"regime":"Extreme Cold","z":-1.51},{"period":"2017 Q1","deploy_b":2.12,"regime":"Cold","z":-1.18},{"period":"2017 Q2","deploy_b":3.47,"regime":"Neutral","z":0.09},{"period":"2017 Q3","deploy_b":2.92,"regime":"Neutral","z":-0.13},{"period":"2017 Q4","deploy_b":2.72,"regime":"Neutral","z":0.21},{"period":"2018 Q1","deploy_b":3.38,"regime":"Neutral","z":0.22},{"period":"2018 Q2","deploy_b":3.19,"regime":"Cold","z":-0.61},{"period":"2018 Q3","deploy_b":4.77,"regime":"Hot","z":0.62},{"period":"2018 Q4","deploy_b":4.57,"regime":"Hot","z":0.51},{"period":"2019 Q1","deploy_b":3.45,"regime":"Cold","z":-0.63},{"period":"2019 Q2","deploy_b":4.61,"regime":"Neutral","z":0.14},{"period":"2019 Q3","deploy_b":4.69,"regime":"Neutral","z":-0.35},{"period":"2019 Q4","deploy_b":5.12,"regime":"Neutral","z":-0.16},{"period":"2020 Q1","deploy_b":5.86,"regime":"Hot","z":0.54},{"period":"2020 Q2","deploy_b":4.78,"regime":"Neutral","z":-0.48},{"period":"2020 Q3","deploy_b":6.19,"regime":"Neutral","z":0.14},{"period":"2020 Q4","deploy_b":6.57,"regime":"Neutral","z":0.15},{"period":"2021 Q1","deploy_b":13.01,"regime":"Extreme Hot","z":2.08},{"period":"2021 Q2","deploy_b":13.97,"regime":"Extreme Hot","z":2.84},{"period":"2021 Q3","deploy_b":13.52,"regime":"Extreme Hot","z":2.07},{"period":"2021 Q4","deploy_b":13.03,"regime":"Extreme Hot","z":1.81},{"period":"2022 Q1","deploy_b":11.12,"regime":"Neutral","z":0.49},{"period":"2022 Q2","deploy_b":9.92,"regime":"Neutral","z":0.19},{"period":"2022 Q3","deploy_b":4.69,"regime":"Cold","z":-1.3},{"period":"2022 Q4","deploy_b":3.04,"regime":"Extreme Cold","z":-2.05},{"period":"2023 Q1","deploy_b":3.15,"regime":"Extreme Cold","z":-1.93},{"period":"2023 Q2","deploy_b":3.83,"regime":"Extreme Cold","z":-1.5},{"period":"2023 Q3","deploy_b":3.8,"regime":"Cold","z":-1.08},{"period":"2023 Q4","deploy_b":4.57,"regime":"Neutral","z":-0.12},{"period":"2024 Q1","deploy_b":4.41,"regime":"Neutral","z":-0.25},{"period":"2024 Q2","deploy_b":5.21,"regime":"Neutral","z":-0.01},{"period":"2024 Q3","deploy_b":3.74,"regime":"Cold","z":-0.88},{"period":"2024 Q4","deploy_b":5.44,"regime":"Neutral","z":-0.09},{"period":"2025 Q1","deploy_b":7.11,"regime":"Hot","z":0.73},{"period":"2025 Q2","deploy_b":5.79,"regime":"Neutral","z":-0.06},{"period":"2025 Q3","deploy_b":6.22,"regime":"Hot","z":0.58},{"period":"2025 Q4","deploy_b":6.82,"regime":"Neutral","z":0.34},{"period":"2026 Q1","deploy_b":6.23,"regime":"Neutral","z":-0.16}]},"outcome":{"Seed":[{"period":"2011 Q1","outcome_m":2.0,"regime":"Neutral","z":-0.11},{"period":"2011 Q2","outcome_m":4.2,"regime":"Neutral","z":-0.01},{"period":"2011 Q3","outcome_m":0.0,"regime":"Hot","z":1.26},{"period":"2011 Q4","outcome_m":0.0,"regime":"Hot","z":1.49},{"period":"2012 Q1","outcome_m":0.9,"regime":"Hot","z":1.27},{"period":"2012 Q2","outcome_m":0.5,"regime":"Hot","z":0.97},{"period":"2012 Q3","outcome_m":3.5,"regime":"Neutral","z":0.07},{"period":"2012 Q4","outcome_m":8.4,"regime":"Neutral","z":-0.37},{"period":"2013 Q1","outcome_m":0.0,"regime":"Hot","z":0.71},{"period":"2013 Q2","outcome_m":0.0,"regime":"Hot","z":1.08},{"period":"2013 Q3","outcome_m":15.4,"regime":"Hot","z":1.32},{"period":"2013 Q4","outcome_m":6.0,"regime":"Hot","z":0.59},{"period":"2014 Q1","outcome_m":0.0,"regime":"Neutral","z":0.34},{"period":"2014 Q2","outcome_m":0.0,"regime":"Hot","z":0.7},{"period":"2014 Q3","outcome_m":2.4,"regime":"Neutral","z":0.09},{"period":"2014 Q4","outcome_m":0.0,"regime":"Neutral","z":-0.12},{"period":"2015 Q1","outcome_m":0.0,"regime":"Neutral","z":0.5},{"period":"2015 Q2","outcome_m":12.1,"regime":"Neutral","z":0.33},{"period":"2015 Q3","outcome_m":4.6,"regime":"Neutral","z":-0.18},{"period":"2015 Q4","outcome_m":0.0,"regime":"Neutral","z":-0.25},{"period":"2016 Q1","outcome_m":4.6,"regime":"Neutral","z":0.15},{"period":"2016 Q2","outcome_m":8.0,"regime":"Cold","z":-0.94},{"period":"2016 Q3","outcome_m":0.1,"regime":"Cold","z":-0.95},{"period":"2016 Q4","outcome_m":3.9,"regime":"Cold","z":-0.55},{"period":"2017 Q1","outcome_m":7.0,"regime":"Cold","z":-0.66},{"period":"2017 Q2","outcome_m":0.0,"regime":"Neutral","z":-0.38},{"period":"2017 Q3","outcome_m":19.6,"regime":"Neutral","z":-0.37},{"period":"2017 Q4","outcome_m":9.9,"regime":"Neutral","z":-0.23},{"period":"2018 Q1","outcome_m":0.0,"regime":"Hot","z":0.52},{"period":"2018 Q2","outcome_m":4.0,"regime":"Neutral","z":0.2},{"period":"2018 Q3","outcome_m":3.0,"regime":"Cold","z":-0.68},{"period":"2018 Q4","outcome_m":5.0,"regime":"Cold","z":-0.8},{"period":"2019 Q1","outcome_m":5.7,"regime":"Cold","z":-0.65},{"period":"2019 Q2","outcome_m":3.9,"regime":"Cold","z":-0.83},{"period":"2019 Q3","outcome_m":7.0,"regime":"Neutral","z":-0.41},{"period":"2019 Q4","outcome_m":0.0,"regime":"Neutral","z":-0.11},{"period":"2020 Q1","outcome_m":0.0,"regime":"Cold","z":-0.56},{"period":"2020 Q2","outcome_m":6.1,"regime":"Cold","z":-1.17},{"period":"2020 Q3","outcome_m":3.0,"regime":"Cold","z":-0.6},{"period":"2020 Q4","outcome_m":8.0,"regime":"Neutral","z":-0.17},{"period":"2021 Q1","outcome_m":0.0,"regime":"Hot","z":0.73},{"period":"2021 Q2","outcome_m":0.0,"regime":"Extreme Hot","z":1.89},{"period":"2021 Q3","outcome_m":0.0,"regime":"Hot","z":1.34},{"period":"2021 Q4","outcome_m":3.0,"regime":"Extreme Hot","z":1.6},{"period":"2022 Q1","outcome_m":0.0,"regime":"Extreme Hot","z":3.11},{"period":"2022 Q2","outcome_m":108.0,"regime":"Hot","z":0.69},{"period":"2022 Q3","outcome_m":30.1,"regime":"Neutral","z":-0.06},{"period":"2022 Q4","outcome_m":5.0,"regime":"Cold","z":-0.68},{"period":"2023 Q1","outcome_m":2.0,"regime":"Cold","z":-1.24},{"period":"2023 Q2","outcome_m":5.4,"regime":"Cold","z":-1.26},{"period":"2023 Q3","outcome_m":11.6,"regime":"Cold","z":-1.01},{"period":"2023 Q4","outcome_m":0.0,"regime":"Cold","z":-0.84},{"period":"2024 Q1","outcome_m":70.0,"regime":"Cold","z":-0.63},{"period":"2024 Q2","outcome_m":0.0,"regime":"Neutral","z":0.27},{"period":"2024 Q3","outcome_m":0.0,"regime":"Cold","z":-0.92},{"period":"2024 Q4","outcome_m":0.0,"regime":"Cold","z":-0.87},{"period":"2025 Q1","outcome_m":0.0,"regime":"Cold","z":-0.66},{"period":"2025 Q2","outcome_m":0.0,"regime":"Hot","z":1.06},{"period":"2025 Q3","outcome_m":0.0,"regime":"Neutral","z":0.14},{"period":"2025 Q4","outcome_m":0.0,"regime":"Neutral","z":-0.09},{"period":"2026 Q1","outcome_m":0.0,"regime":"Cold","z":-1.29}],"Series A":[{"period":"2011 Q1","outcome_m":21.8,"regime":"Neutral","z":-0.01},{"period":"2011 Q2","outcome_m":8.0,"regime":"Hot","z":0.56},{"period":"2011 Q3","outcome_m":0.0,"regime":"Neutral","z":0.22},{"period":"2011 Q4","outcome_m":4.3,"regime":"Hot","z":0.78},{"period":"2012 Q1","outcome_m":18.0,"regime":"Neutral","z":0.38},{"period":"2012 Q2","outcome_m":70.0,"regime":"Neutral","z":-0.02},{"period":"2012 Q3","outcome_m":105.0,"regime":"Cold","z":-0.53},{"period":"2012 Q4","outcome_m":17.2,"regime":"Cold","z":-0.86},{"period":"2013 Q1","outcome_m":25.0,"regime":"Neutral","z":-0.35},{"period":"2013 Q2","outcome_m":20.5,"regime":"Neutral","z":0.49},{"period":"2013 Q3","outcome_m":13.9,"regime":"Neutral","z":-0.07},{"period":"2013 Q4","outcome_m":23.2,"regime":"Hot","z":0.62},{"period":"2014 Q1","outcome_m":20.0,"regime":"Neutral","z":0.21},{"period":"2014 Q2","outcome_m":74.3,"regime":"Hot","z":1.0},{"period":"2014 Q3","outcome_m":23.0,"regime":"Neutral","z":-0.15},{"period":"2014 Q4","outcome_m":27.4,"regime":"Neutral","z":-0.22},{"period":"2015 Q1","outcome_m":10.0,"regime":"Neutral","z":-0.06},{"period":"2015 Q2","outcome_m":53.9,"regime":"Hot","z":0.71},{"period":"2015 Q3","outcome_m":4.0,"regime":"Neutral","z":0.29},{"period":"2015 Q4","outcome_m":57.3,"regime":"Neutral","z":0.17},{"period":"2016 Q1","outcome_m":15.0,"regime":"Neutral","z":0.27},{"period":"2016 Q2","outcome_m":27.2,"regime":"Cold","z":-0.52},{"period":"2016 Q3","outcome_m":0.0,"regime":"Cold","z":-0.79},{"period":"2016 Q4","outcome_m":7.0,"regime":"Cold","z":-0.71},{"period":"2017 Q1","outcome_m":14.6,"regime":"Cold","z":-0.59},{"period":"2017 Q2","outcome_m":57.8,"regime":"Neutral","z":-0.47},{"period":"2017 Q3","outcome_m":51.5,"regime":"Neutral","z":-0.16},{"period":"2017 Q4","outcome_m":19.5,"regime":"Cold","z":-0.5},{"period":"2018 Q1","outcome_m":69.0,"regime":"Hot","z":0.64},{"period":"2018 Q2","outcome_m":185.0,"regime":"Hot","z":0.62},{"period":"2018 Q3","outcome_m":109.1,"regime":"Neutral","z":-0.25},{"period":"2018 Q4","outcome_m":35.0,"regime":"Neutral","z":0.33},{"period":"2019 Q1","outcome_m":65.0,"regime":"Neutral","z":0.27},{"period":"2019 Q2","outcome_m":81.0,"regime":"Neutral","z":-0.48},{"period":"2019 Q3","outcome_m":18.2,"regime":"Neutral","z":-0.3},{"period":"2019 Q4","outcome_m":71.5,"regime":"Cold","z":-0.64},{"period":"2020 Q1","outcome_m":15.0,"regime":"Cold","z":-1.3},{"period":"2020 Q2","outcome_m":52.0,"regime":"Neutral","z":-0.25},{"period":"2020 Q3","outcome_m":0.0,"regime":"Cold","z":-1.19},{"period":"2020 Q4","outcome_m":10.0,"regime":"Neutral","z":0.39},{"period":"2021 Q1","outcome_m":50.0,"regime":"Hot","z":1.48},{"period":"2021 Q2","outcome_m":124.0,"regime":"Extreme Hot","z":2.47},{"period":"2021 Q3","outcome_m":110.0,"regime":"Extreme Hot","z":3.74},{"period":"2021 Q4","outcome_m":0.0,"regime":"Extreme Hot","z":2.39},{"period":"2022 Q1","outcome_m":100.0,"regime":"Hot","z":1.16},{"period":"2022 Q2","outcome_m":12.0,"regime":"Neutral","z":0.0},{"period":"2022 Q3","outcome_m":12.5,"regime":"Neutral","z":-0.19},{"period":"2022 Q4","outcome_m":0.0,"regime":"Cold","z":-1.23},{"period":"2023 Q1","outcome_m":25.6,"regime":"Cold","z":-1.25},{"period":"2023 Q2","outcome_m":110.0,"regime":"Cold","z":-1.42},{"period":"2023 Q3","outcome_m":0.0,"regime":"Extreme Cold","z":-2.07},{"period":"2023 Q4","outcome_m":0.0,"regime":"Cold","z":-1.17},{"period":"2024 Q1","outcome_m":21.0,"regime":"Cold","z":-0.67},{"period":"2024 Q2","outcome_m":320.0,"regime":"Hot","z":0.62},{"period":"2024 Q3","outcome_m":1390.0,"regime":"Neutral","z":0.19},{"period":"2024 Q4","outcome_m":400.0,"regime":"Neutral","z":-0.02},{"period":"2025 Q1","outcome_m":75.0,"regime":"Neutral","z":-0.37},{"period":"2025 Q2","outcome_m":0.0,"regime":"Cold","z":-0.69},{"period":"2025 Q3","outcome_m":0.0,"regime":"Neutral","z":-0.2},{"period":"2025 Q4","outcome_m":0.0,"regime":"Neutral","z":0.12},{"period":"2026 Q1","outcome_m":0.0,"regime":"Neutral","z":0.19}],"Series B":[{"period":"2011 Q1","outcome_m":0.0,"regime":"Neutral","z":-0.44},{"period":"2011 Q2","outcome_m":0.0,"regime":"Neutral","z":-0.01},{"period":"2011 Q3","outcome_m":0.0,"regime":"Hot","z":0.65},{"period":"2011 Q4","outcome_m":37.0,"regime":"Neutral","z":0.5},{"period":"2012 Q1","outcome_m":0.0,"regime":"Cold","z":-1.12},{"period":"2012 Q2","outcome_m":5.0,"regime":"Cold","z":-0.59},{"period":"2012 Q3","outcome_m":52.0,"regime":"Cold","z":-0.72},{"period":"2012 Q4","outcome_m":0.0,"regime":"Cold","z":-0.78},{"period":"2013 Q1","outcome_m":24.0,"regime":"Neutral","z":-0.37},{"period":"2013 Q2","outcome_m":80.0,"regime":"Neutral","z":-0.28},{"period":"2013 Q3","outcome_m":58.5,"regime":"Neutral","z":-0.44},{"period":"2013 Q4","outcome_m":40.9,"regime":"Neutral","z":0.19},{"period":"2014 Q1","outcome_m":15.0,"regime":"Neutral","z":0.36},{"period":"2014 Q2","outcome_m":108.0,"regime":"Hot","z":1.26},{"period":"2014 Q3","outcome_m":200.0,"regime":"Hot","z":0.53},{"period":"2014 Q4","outcome_m":44.9,"regime":"Hot","z":0.73},{"period":"2015 Q1","outcome_m":40.0,"regime":"Hot","z":0.77},{"period":"2015 Q2","outcome_m":446.0,"regime":"Hot","z":0.69},{"period":"2015 Q3","outcome_m":274.0,"regime":"Hot","z":0.89},{"period":"2015 Q4","outcome_m":115.0,"regime":"Neutral","z":0.08},{"period":"2016 Q1","outcome_m":30.0,"regime":"Cold","z":-0.58},{"period":"2016 Q2","outcome_m":53.0,"regime":"Cold","z":-0.55},{"period":"2016 Q3","outcome_m":35.0,"regime":"Cold","z":-0.8},{"period":"2016 Q4","outcome_m":28.0,"regime":"Cold","z":-1.45},{"period":"2017 Q1","outcome_m":105.0,"regime":"Neutral","z":0.29},{"period":"2017 Q2","outcome_m":0.0,"regime":"Neutral","z":-0.42},{"period":"2017 Q3","outcome_m":18.0,"regime":"Neutral","z":0.24},{"period":"2017 Q4","outcome_m":0.0,"regime":"Neutral","z":0.16},{"period":"2018 Q1","outcome_m":229.0,"regime":"Neutral","z":-0.24},{"period":"2018 Q2","outcome_m":186.5,"regime":"Neutral","z":0.21},{"period":"2018 Q3","outcome_m":92.3,"regime":"Neutral","z":-0.06},{"period":"2018 Q4","outcome_m":40.0,"regime":"Neutral","z":0.27},{"period":"2019 Q1","outcome_m":110.0,"regime":"Neutral","z":0.19},{"period":"2019 Q2","outcome_m":308.0,"regime":"Neutral","z":0.37},{"period":"2019 Q3","outcome_m":461.7,"regime":"Cold","z":-0.93},{"period":"2019 Q4","outcome_m":55.0,"regime":"Cold","z":-1.05},{"period":"2020 Q1","outcome_m":15.9,"regime":"Neutral","z":0.27},{"period":"2020 Q2","outcome_m":57.0,"regime":"Cold","z":-0.88},{"period":"2020 Q3","outcome_m":188.0,"regime":"Neutral","z":-0.28},{"period":"2020 Q4","outcome_m":197.0,"regime":"Neutral","z":0.46},{"period":"2021 Q1","outcome_m":80.0,"regime":"Hot","z":1.12},{"period":"2021 Q2","outcome_m":293.0,"regime":"Extreme Hot","z":2.3},{"period":"2021 Q3","outcome_m":0.0,"regime":"Extreme Hot","z":2.59},{"period":"2021 Q4","outcome_m":320.0,"regime":"Extreme Hot","z":2.76},{"period":"2022 Q1","outcome_m":115.0,"regime":"Hot","z":0.95},{"period":"2022 Q2","outcome_m":580.0,"regime":"Hot","z":0.69},{"period":"2022 Q3","outcome_m":10.0,"regime":"Cold","z":-1.0},{"period":"2022 Q4","outcome_m":150.0,"regime":"Cold","z":-1.32},{"period":"2023 Q1","outcome_m":0.0,"regime":"Cold","z":-1.26},{"period":"2023 Q2","outcome_m":421.0,"regime":"Cold","z":-1.37},{"period":"2023 Q3","outcome_m":0.0,"regime":"Cold","z":-1.09},{"period":"2023 Q4","outcome_m":110.0,"regime":"Extreme Cold","z":-1.62},{"period":"2024 Q1","outcome_m":868.6,"regime":"Cold","z":-0.54},{"period":"2024 Q2","outcome_m":45.0,"regime":"Neutral","z":-0.42},{"period":"2024 Q3","outcome_m":0.0,"regime":"Cold","z":-0.84},{"period":"2024 Q4","outcome_m":105.0,"regime":"Neutral","z":-0.29},{"period":"2025 Q1","outcome_m":400.0,"regime":"Neutral","z":-0.21},{"period":"2025 Q2","outcome_m":135.0,"regime":"Neutral","z":-0.26},{"period":"2025 Q3","outcome_m":210.0,"regime":"Hot","z":0.58},{"period":"2025 Q4","outcome_m":600.0,"regime":"Extreme Hot","z":1.91},{"period":"2026 Q1","outcome_m":0.0,"regime":"Neutral","z":-0.22}],"Series C":[{"period":"2011 Q1","outcome_m":0.0,"regime":"Extreme Hot","z":1.54},{"period":"2011 Q2","outcome_m":0.0,"regime":"Cold","z":-0.59},{"period":"2011 Q3","outcome_m":0.0,"regime":"Hot","z":0.63},{"period":"2011 Q4","outcome_m":0.0,"regime":"Cold","z":-0.73},{"period":"2012 Q1","outcome_m":0.0,"regime":"Cold","z":-0.69},{"period":"2012 Q2","outcome_m":0.0,"regime":"Neutral","z":0.4},{"period":"2012 Q3","outcome_m":0.0,"regime":"Neutral","z":-0.36},{"period":"2012 Q4","outcome_m":0.0,"regime":"Neutral","z":-0.37},{"period":"2013 Q1","outcome_m":0.0,"regime":"Cold","z":-0.9},{"period":"2013 Q2","outcome_m":0.0,"regime":"Cold","z":-0.84},{"period":"2013 Q3","outcome_m":363.0,"regime":"Neutral","z":0.37},{"period":"2013 Q4","outcome_m":61.5,"regime":"Neutral","z":0.11},{"period":"2014 Q1","outcome_m":100.0,"regime":"Hot","z":0.99},{"period":"2014 Q2","outcome_m":159.0,"regime":"Hot","z":1.48},{"period":"2014 Q3","outcome_m":41.0,"regime":"Neutral","z":-0.3},{"period":"2014 Q4","outcome_m":70.0,"regime":"Neutral","z":-0.42},{"period":"2015 Q1","outcome_m":536.0,"regime":"Neutral","z":0.15},{"period":"2015 Q2","outcome_m":79.0,"regime":"Neutral","z":-0.09},{"period":"2015 Q3","outcome_m":135.0,"regime":"Neutral","z":0.35},{"period":"2015 Q4","outcome_m":0.0,"regime":"Neutral","z":-0.34},{"period":"2016 Q1","outcome_m":147.0,"regime":"Hot","z":0.89},{"period":"2016 Q2","outcome_m":144.5,"regime":"Neutral","z":0.16},{"period":"2016 Q3","outcome_m":71.5,"regime":"Cold","z":-0.66},{"period":"2016 Q4","outcome_m":60.0,"regime":"Extreme Cold","z":-1.51},{"period":"2017 Q1","outcome_m":120.0,"regime":"Cold","z":-1.18},{"period":"2017 Q2","outcome_m":360.0,"regime":"Neutral","z":0.09},{"period":"2017 Q3","outcome_m":366.0,"regime":"Neutral","z":-0.13},{"period":"2017 Q4","outcome_m":62.5,"regime":"Neutral","z":0.21},{"period":"2018 Q1","outcome_m":62.0,"regime":"Neutral","z":0.22},{"period":"2018 Q2","outcome_m":70.0,"regime":"Cold","z":-0.61},{"period":"2018 Q3","outcome_m":365.0,"regime":"Hot","z":0.62},{"period":"2018 Q4","outcome_m":886.0,"regime":"Hot","z":0.51},{"period":"2019 Q1","outcome_m":140.0,"regime":"Cold","z":-0.63},{"period":"2019 Q2","outcome_m":0.0,"regime":"Neutral","z":0.14},{"period":"2019 Q3","outcome_m":134.5,"regime":"Neutral","z":-0.35},{"period":"2019 Q4","outcome_m":0.0,"regime":"Neutral","z":-0.16},{"period":"2020 Q1","outcome_m":473.0,"regime":"Hot","z":0.54},{"period":"2020 Q2","outcome_m":240.0,"regime":"Neutral","z":-0.48},{"period":"2020 Q3","outcome_m":400.0,"regime":"Neutral","z":0.14},{"period":"2020 Q4","outcome_m":470.0,"regime":"Neutral","z":0.15},{"period":"2021 Q1","outcome_m":70.0,"regime":"Extreme Hot","z":2.08},{"period":"2021 Q2","outcome_m":558.0,"regime":"Extreme Hot","z":2.84},{"period":"2021 Q3","outcome_m":710.0,"regime":"Extreme Hot","z":2.07},{"period":"2021 Q4","outcome_m":525.0,"regime":"Extreme Hot","z":1.81},{"period":"2022 Q1","outcome_m":200.0,"regime":"Neutral","z":0.49},{"period":"2022 Q2","outcome_m":1435.0,"regime":"Neutral","z":0.19},{"period":"2022 Q3","outcome_m":200.0,"regime":"Cold","z":-1.3},{"period":"2022 Q4","outcome_m":60.0,"regime":"Extreme Cold","z":-2.05},{"period":"2023 Q1","outcome_m":300.0,"regime":"Extreme Cold","z":-1.93},{"period":"2023 Q2","outcome_m":450.0,"regime":"Extreme Cold","z":-1.5},{"period":"2023 Q3","outcome_m":0.0,"regime":"Cold","z":-1.08},{"period":"2023 Q4","outcome_m":100.0,"regime":"Neutral","z":-0.12},{"period":"2024 Q1","outcome_m":150.0,"regime":"Neutral","z":-0.25},{"period":"2024 Q2","outcome_m":1162.7,"regime":"Neutral","z":-0.01},{"period":"2024 Q3","outcome_m":100.0,"regime":"Cold","z":-0.88},{"period":"2024 Q4","outcome_m":0.0,"regime":"Neutral","z":-0.09},{"period":"2025 Q1","outcome_m":75.0,"regime":"Hot","z":0.73},{"period":"2025 Q2","outcome_m":1435.0,"regime":"Neutral","z":-0.06},{"period":"2025 Q3","outcome_m":1550.0,"regime":"Hot","z":0.58},{"period":"2025 Q4","outcome_m":550.0,"regime":"Neutral","z":0.34},{"period":"2026 Q1","outcome_m":1400.0,"regime":"Neutral","z":-0.16}]},"line":{"labels":["2011 Q1","2011 Q2","2011 Q3","2011 Q4","2012 Q1","2012 Q2","2012 Q3","2012 Q4","2013 Q1","2013 Q2","2013 Q3","2013 Q4","2014 Q1","2014 Q2","2014 Q3","2014 Q4","2015 Q1","2015 Q2","2015 Q3","2015 Q4","2016 Q1","2016 Q2","2016 Q3","2016 Q4","2017 Q1","2017 Q2","2017 Q3","2017 Q4","2018 Q1","2018 Q2","2018 Q3","2018 Q4","2019 Q1","2019 Q2","2019 Q3","2019 Q4","2020 Q1","2020 Q2","2020 Q3","2020 Q4","2021 Q1","2021 Q2","2021 Q3","2021 Q4","2022 Q1","2022 Q2","2022 Q3","2022 Q4","2023 Q1","2023 Q2","2023 Q3","2023 Q4","2024 Q1","2024 Q2","2024 Q3","2024 Q4","2025 Q1","2025 Q2","2025 Q3","2025 Q4","2026 Q1"],"Seed":[-0.11,-0.01,1.26,1.49,1.27,0.97,0.07,-0.37,0.71,1.08,1.32,0.59,0.34,0.7,0.09,-0.12,0.5,0.33,-0.18,-0.25,0.15,-0.94,-0.95,-0.55,-0.66,-0.38,-0.37,-0.23,0.52,0.2,-0.68,-0.8,-0.65,-0.83,-0.41,-0.11,-0.56,-1.17,-0.6,-0.17,0.73,1.89,1.34,1.6,3.11,0.69,-0.06,-0.68,-1.24,-1.26,-1.01,-0.84,-0.63,0.27,-0.92,-0.87,-0.66,1.06,0.14,-0.09,-1.29],"Series A":[-0.01,0.56,0.22,0.78,0.38,-0.02,-0.53,-0.86,-0.35,0.49,-0.07,0.62,0.21,1.0,-0.15,-0.22,-0.06,0.71,0.29,0.17,0.27,-0.52,-0.79,-0.71,-0.59,-0.47,-0.16,-0.5,0.64,0.62,-0.25,0.33,0.27,-0.48,-0.3,-0.64,-1.3,-0.25,-1.19,0.39,1.48,2.47,3.74,2.39,1.16,0.0,-0.19,-1.23,-1.25,-1.42,-2.07,-1.17,-0.67,0.62,0.19,-0.02,-0.37,-0.69,-0.2,0.12,0.19],"Series B":[-0.44,-0.01,0.65,0.5,-1.12,-0.59,-0.72,-0.78,-0.37,-0.28,-0.44,0.19,0.36,1.26,0.53,0.73,0.77,0.69,0.89,0.08,-0.58,-0.55,-0.8,-1.45,0.29,-0.42,0.24,0.16,-0.24,0.21,-0.06,0.27,0.19,0.37,-0.93,-1.05,0.27,-0.88,-0.28,0.46,1.12,2.3,2.59,2.76,0.95,0.69,-1.0,-1.32,-1.26,-1.37,-1.09,-1.62,-0.54,-0.42,-0.84,-0.29,-0.21,-0.26,0.58,1.91,-0.22],"Series C":[1.54,-0.59,0.63,-0.73,-0.69,0.4,-0.36,-0.37,-0.9,-0.84,0.37,0.11,0.99,1.48,-0.3,-0.42,0.15,-0.09,0.35,-0.34,0.89,0.16,-0.66,-1.51,-1.18,0.09,-0.13,0.21,0.22,-0.61,0.62,0.51,-0.63,0.14,-0.35,-0.16,0.54,-0.48,0.14,0.15,2.08,2.84,2.07,1.81,0.49,0.19,-1.3,-2.05,-1.93,-1.5,-1.08,-0.12,-0.25,-0.01,-0.88,-0.09,0.73,-0.06,0.58,0.34,-0.16]},"scatter":{"Seed":[["2011 Q1",-0.11,2.0],["2011 Q2",-0.01,4.2],["2011 Q3",1.26,0.0],["2011 Q4",1.49,0.0],["2012 Q1",1.27,0.9],["2012 Q2",0.97,0.5],["2012 Q3",0.07,3.5],["2012 Q4",-0.37,8.4],["2013 Q1",0.71,0.0],["2013 Q2",1.08,0.0],["2013 Q3",1.32,15.4],["2013 Q4",0.59,6.0],["2014 Q1",0.34,0.0],["2014 Q2",0.7,0.0],["2014 Q3",0.09,2.4],["2014 Q4",-0.12,0.0],["2015 Q1",0.5,0.0],["2015 Q2",0.33,12.1],["2015 Q3",-0.18,4.6],["2015 Q4",-0.25,0.0],["2016 Q1",0.15,4.6],["2016 Q2",-0.94,8.0],["2016 Q3",-0.95,0.1],["2016 Q4",-0.55,3.9],["2017 Q1",-0.66,7.0],["2017 Q2",-0.38,0.0],["2017 Q3",-0.37,19.6],["2017 Q4",-0.23,9.9],["2018 Q1",0.52,0.0],["2018 Q2",0.2,4.0],["2018 Q3",-0.68,3.0],["2018 Q4",-0.8,5.0],["2019 Q1",-0.65,5.7],["2019 Q2",-0.83,3.9],["2019 Q3",-0.41,7.0],["2019 Q4",-0.11,0.0],["2020 Q1",-0.56,0.0],["2020 Q2",-1.17,6.1],["2020 Q3",-0.6,3.0],["2020 Q4",-0.17,8.0],["2021 Q1",0.73,0.0],["2021 Q2",1.89,0.0],["2021 Q3",1.34,0.0],["2021 Q4",1.6,3.0],["2022 Q1",3.11,0.0],["2022 Q2",0.69,108.0],["2022 Q3",-0.06,30.1],["2022 Q4",-0.68,5.0],["2023 Q1",-1.24,2.0],["2023 Q2",-1.26,5.4],["2023 Q3",-1.01,11.6],["2023 Q4",-0.84,0.0],["2024 Q1",-0.63,70.0],["2024 Q2",0.27,0.0],["2024 Q3",-0.92,0.0],["2024 Q4",-0.87,0.0],["2025 Q1",-0.66,0.0],["2025 Q2",1.06,0.0],["2025 Q3",0.14,0.0],["2025 Q4",-0.09,0.0],["2026 Q1",-1.29,0.0]],"Series A":[["2011 Q1",-0.01,21.8],["2011 Q2",0.56,8.0],["2011 Q3",0.22,0.0],["2011 Q4",0.78,4.3],["2012 Q1",0.38,18.0],["2012 Q2",-0.02,70.0],["2012 Q3",-0.53,105.0],["2012 Q4",-0.86,17.2],["2013 Q1",-0.35,25.0],["2013 Q2",0.49,20.5],["2013 Q3",-0.07,13.9],["2013 Q4",0.62,23.2],["2014 Q1",0.21,20.0],["2014 Q2",1.0,74.3],["2014 Q3",-0.15,23.0],["2014 Q4",-0.22,27.4],["2015 Q1",-0.06,10.0],["2015 Q2",0.71,53.9],["2015 Q3",0.29,4.0],["2015 Q4",0.17,57.3],["2016 Q1",0.27,15.0],["2016 Q2",-0.52,27.2],["2016 Q3",-0.79,0.0],["2016 Q4",-0.71,7.0],["2017 Q1",-0.59,14.6],["2017 Q2",-0.47,57.8],["2017 Q3",-0.16,51.5],["2017 Q4",-0.5,19.5],["2018 Q1",0.64,69.0],["2018 Q2",0.62,185.0],["2018 Q3",-0.25,109.1],["2018 Q4",0.33,35.0],["2019 Q1",0.27,65.0],["2019 Q2",-0.48,81.0],["2019 Q3",-0.3,18.2],["2019 Q4",-0.64,71.5],["2020 Q1",-1.3,15.0],["2020 Q2",-0.25,52.0],["2020 Q3",-1.19,0.0],["2020 Q4",0.39,10.0],["2021 Q1",1.48,50.0],["2021 Q2",2.47,124.0],["2021 Q3",3.74,110.0],["2021 Q4",2.39,0.0],["2022 Q1",1.16,100.0],["2022 Q2",0.0,12.0],["2022 Q3",-0.19,12.5],["2022 Q4",-1.23,0.0],["2023 Q1",-1.25,25.6],["2023 Q2",-1.42,110.0],["2023 Q3",-2.07,0.0],["2023 Q4",-1.17,0.0],["2024 Q1",-0.67,21.0],["2024 Q2",0.62,320.0],["2024 Q3",0.19,1390.0],["2024 Q4",-0.02,400.0],["2025 Q1",-0.37,75.0],["2025 Q2",-0.69,0.0],["2025 Q3",-0.2,0.0],["2025 Q4",0.12,0.0],["2026 Q1",0.19,0.0]],"Series B":[["2011 Q1",-0.44,0.0],["2011 Q2",-0.01,0.0],["2011 Q3",0.65,0.0],["2011 Q4",0.5,37.0],["2012 Q1",-1.12,0.0],["2012 Q2",-0.59,5.0],["2012 Q3",-0.72,52.0],["2012 Q4",-0.78,0.0],["2013 Q1",-0.37,24.0],["2013 Q2",-0.28,80.0],["2013 Q3",-0.44,58.5],["2013 Q4",0.19,40.9],["2014 Q1",0.36,15.0],["2014 Q2",1.26,108.0],["2014 Q3",0.53,200.0],["2014 Q4",0.73,44.9],["2015 Q1",0.77,40.0],["2015 Q2",0.69,446.0],["2015 Q3",0.89,274.0],["2015 Q4",0.08,115.0],["2016 Q1",-0.58,30.0],["2016 Q2",-0.55,53.0],["2016 Q3",-0.8,35.0],["2016 Q4",-1.45,28.0],["2017 Q1",0.29,105.0],["2017 Q2",-0.42,0.0],["2017 Q3",0.24,18.0],["2017 Q4",0.16,0.0],["2018 Q1",-0.24,229.0],["2018 Q2",0.21,186.5],["2018 Q3",-0.06,92.3],["2018 Q4",0.27,40.0],["2019 Q1",0.19,110.0],["2019 Q2",0.37,308.0],["2019 Q3",-0.93,461.7],["2019 Q4",-1.05,55.0],["2020 Q1",0.27,15.9],["2020 Q2",-0.88,57.0],["2020 Q3",-0.28,188.0],["2020 Q4",0.46,197.0],["2021 Q1",1.12,80.0],["2021 Q2",2.3,293.0],["2021 Q3",2.59,0.0],["2021 Q4",2.76,320.0],["2022 Q1",0.95,115.0],["2022 Q2",0.69,580.0],["2022 Q3",-1.0,10.0],["2022 Q4",-1.32,150.0],["2023 Q1",-1.26,0.0],["2023 Q2",-1.37,421.0],["2023 Q3",-1.09,0.0],["2023 Q4",-1.62,110.0],["2024 Q1",-0.54,868.6],["2024 Q2",-0.42,45.0],["2024 Q3",-0.84,0.0],["2024 Q4",-0.29,105.0],["2025 Q1",-0.21,400.0],["2025 Q2",-0.26,135.0],["2025 Q3",0.58,210.0],["2025 Q4",1.91,600.0],["2026 Q1",-0.22,0.0]],"Series C":[["2011 Q1",1.54,0.0],["2011 Q2",-0.59,0.0],["2011 Q3",0.63,0.0],["2011 Q4",-0.73,0.0],["2012 Q1",-0.69,0.0],["2012 Q2",0.4,0.0],["2012 Q3",-0.36,0.0],["2012 Q4",-0.37,0.0],["2013 Q1",-0.9,0.0],["2013 Q2",-0.84,0.0],["2013 Q3",0.37,363.0],["2013 Q4",0.11,61.5],["2014 Q1",0.99,100.0],["2014 Q2",1.48,159.0],["2014 Q3",-0.3,41.0],["2014 Q4",-0.42,70.0],["2015 Q1",0.15,536.0],["2015 Q2",-0.09,79.0],["2015 Q3",0.35,135.0],["2015 Q4",-0.34,0.0],["2016 Q1",0.89,147.0],["2016 Q2",0.16,144.5],["2016 Q3",-0.66,71.5],["2016 Q4",-1.51,60.0],["2017 Q1",-1.18,120.0],["2017 Q2",0.09,360.0],["2017 Q3",-0.13,366.0],["2017 Q4",0.21,62.5],["2018 Q1",0.22,62.0],["2018 Q2",-0.61,70.0],["2018 Q3",0.62,365.0],["2018 Q4",0.51,886.0],["2019 Q1",-0.63,140.0],["2019 Q2",0.14,0.0],["2019 Q3",-0.35,134.5],["2019 Q4",-0.16,0.0],["2020 Q1",0.54,473.0],["2020 Q2",-0.48,240.0],["2020 Q3",0.14,400.0],["2020 Q4",0.15,470.0],["2021 Q1",2.08,70.0],["2021 Q2",2.84,558.0],["2021 Q3",2.07,710.0],["2021 Q4",1.81,525.0],["2022 Q1",0.49,200.0],["2022 Q2",0.19,1435.0],["2022 Q3",-1.3,200.0],["2022 Q4",-2.05,60.0],["2023 Q1",-1.93,300.0],["2023 Q2",-1.5,450.0],["2023 Q3",-1.08,0.0],["2023 Q4",-0.12,100.0],["2024 Q1",-0.25,150.0],["2024 Q2",-0.01,1162.7],["2024 Q3",-0.88,100.0],["2024 Q4",-0.09,0.0],["2025 Q1",0.73,75.0],["2025 Q2",-0.06,1435.0],["2025 Q3",0.58,1550.0],["2025 Q4",0.34,550.0],["2026 Q1",-0.16,1400.0]]},"stats":[{"stage":"Seed","n_full":61,"r_full":-0.029,"p_full":0.825,"rs_full":-0.271,"ps_full":0.0347,"n_trim":57,"r_trim":-0.217,"p_trim":0.1053,"rs_trim":-0.307,"ps_trim":0.0201,"fence":15.6,"outliers":[["2017 Q3",19.6],["2022 Q2",108.0],["2022 Q3",30.1],["2024 Q1",70.0]]},{"stage":"Series A","n_full":61,"r_full":0.108,"p_full":0.4088,"rs_full":0.249,"ps_full":0.053,"n_trim":57,"r_trim":0.333,"p_trim":0.0115,"rs_trim":0.193,"ps_trim":0.1504,"fence":157.9,"outliers":[["2018 Q2",185.0],["2024 Q2",320.0],["2024 Q3",1390.0],["2024 Q4",400.0]]},{"stage":"Series B","n_full":61,"r_full":0.223,"p_full":0.0844,"rs_full":0.292,"ps_full":0.0223,"n_trim":58,"r_trim":0.208,"p_trim":0.1174,"rs_trim":0.265,"ps_trim":0.0442,"fence":463.6,"outliers":[["2022 Q2",580.0],["2024 Q1",868.6],["2025 Q4",600.0]]},{"stage":"Series C","n_full":61,"r_full":0.216,"p_full":0.0949,"rs_full":0.344,"ps_full":0.0066,"n_trim":56,"r_trim":0.358,"p_trim":0.0068,"rs_trim":0.345,"ps_trim":0.0091,"fence":1054.2,"outliers":[["2022 Q2",1435.0],["2024 Q2",1162.7],["2025 Q2",1435.0],["2025 Q3",1550.0],["2026 Q1",1400.0]]}],"companies":["Abnormal","Abridge","Affirm","Anduril","Anthropic","Applied Intuition","Astera Labs","Attentive","Auth0","Baseten","Benchling","Bilt","Boring Company","Brex","Cerebras","Chainalysis","Chewy","Chime","Clickhouse","Cognition","Coinbase","Commure","Confluent","Coreweave","Crusoe","Cursor","Databricks","Datadog","Deel","Discord","Doordash","Doximity","Duolingo","Elastic","ElevenLabs","Etched","Faire","FalconX","Figma","Figure AI","Fireblocks","Fivetran","Flock Safety","Freshworks","Github","Gitlab","Glean","Gong","GoPuff","Groq","Gusto","Harvey","Hims & Hers","Hugging Face","Instacart","IonQ","Island","Kalshi","Klaviyo","Livongo","Lyra Health","Mercor","Navan","Netskope","Notion","OpenAI","OpenEvidence","Perplexity","Physical Intelligence","Plaid","Polymarket","Qualtrics","Ramp","Reddit","Rippling","Ro","Robinhood","Rubrik","Samsara","Scale","SentinelOne","ServiceTitan","Shield AI","Skild AI","Snap","Snowflake","Snyk","Solana","SSI","Stripe","Toast","Uber","UiPath","Upstart","VAST Data","Vercel","Verkada","Whatnot","WhatsApp","Zoom"],"funding":{"Uber":[{"stage":"Seed","date":"2009-08-20","size":0.2},{"stage":"Series A","date":"2011-02-14","size":11.0},{"stage":"Series B","date":"2011-12-07","size":37.0},{"stage":"Series C","date":"2013-08-23","size":363.0}],"Duolingo":[{"stage":"Series A","date":"2011-10-19","size":3.3},{"stage":"Series B","date":"2012-09-17","size":15.0},{"stage":"Series C","date":"2014-02-18","size":20.0}],"WhatsApp":[{"stage":"Seed","date":"2009-10-01","size":0.25},{"stage":"Series A","date":"2011-04-08","size":8.0},{"stage":"Series B","date":"2013-07-01","size":52.0}],"Doximity":[{"stage":"Series A","date":"2011-03-16","size":10.8},{"stage":"Series B","date":"2012-09-05","size":17.0},{"stage":"Series C","date":"2014-04-29","size":54.0}],"Freshworks":[{"stage":"Series A","date":"2011-12-02","size":1.0},{"stage":"Series B","date":"2012-04-26","size":5.0},{"stage":"Series C","date":"2013-11-21","size":7.0}],"Snowflake":[{"stage":"Seed","date":"2012-02-01","size":0.9},{"stage":"Series A","date":"2012-08-01","size":5.0},{"stage":"Series B","date":"2014-10-21","size":26.0},{"stage":"Series C","date":"2015-06-23","size":79.0}],"Datadog":[{"stage":"Seed","date":"2011-04-29","size":1.2},{"stage":"Series A","date":"2012-11-21","size":6.2},{"stage":"Series B","date":"2014-02-04","size":15.0},{"stage":"Series C","date":"2015-01-28","size":31.0}],"Reddit":[{"stage":"Seed","date":"2005-06-01","size":0.1},{"stage":"Series A","date":"2012-12-03","size":1.0},{"stage":"Series B","date":"2014-09-30","size":50.0},{"stage":"Series C","date":"2017-07-31","size":200.0}],"Qualtrics":[{"stage":"Series A","date":"2012-05-15","size":70.0},{"stage":"Series B","date":"2014-09-24","size":150.0},{"stage":"Series C","date":"2017-04-12","size":180.0}],"Elastic":[{"stage":"Series A","date":"2012-11-08","size":10.0},{"stage":"Series B","date":"2013-02-19","size":24.0},{"stage":"Series C","date":"2014-06-05","size":70.0}],"Github":[{"stage":"Series A","date":"2012-07-09","size":100.0},{"stage":"Series B","date":"2015-07-29","size":250.0}],"Stripe":[{"stage":"Seed","date":"2011-03-28","size":2.0},{"stage":"Series A","date":"2012-02-09","size":18.0},{"stage":"Series B","date":"2012-07-09","size":20.0},{"stage":"Series C","date":"2014-01-22","size":80.0},{"stage":"Series C-2","date":"2014-12-02","size":70.0},{"stage":"Series C-3","date":"2015-07-28","size":100.0}],"Coinbase":[{"stage":"Seed","date":"2012-09-12","size":0.6},{"stage":"Series A","date":"2013-05-07","size":6.1},{"stage":"Series B","date":"2013-12-12","size":25.0},{"stage":"Series C","date":"2015-01-13","size":75.0},{"stage":"Series C-2","date":"2016-07-07","size":10.5}],"Zoom":[{"stage":"Seed","date":"2011-06-01","size":3.0},{"stage":"Series A","date":"2013-01-28","size":6.0},{"stage":"Series B","date":"2013-09-24","size":6.5},{"stage":"Series C","date":"2015-02-04","size":30.0}],"Snap":[{"stage":"Seed","date":"2012-05-01","size":0.485},{"stage":"Series A","date":"2013-02-08","size":13.5},{"stage":"Series B","date":"2013-06-22","size":80.0},{"stage":"Series C","date":"2013-12-11","size":54.5}],"Chewy":[{"stage":"Series A","date":"2013-10-24","size":15.0},{"stage":"Series B","date":"2014-04-02","size":30.0},{"stage":"Series C","date":"2014-08-01","size":41.0}],"Instacart":[{"stage":"Seed","date":"2012-10-15","size":2.3},{"stage":"Series A","date":"2013-04-04","size":8.5},{"stage":"Series B","date":"2014-06-16","size":45.0},{"stage":"Series C","date":"2015-01-13","size":220.0}],"Upstart":[{"stage":"Seed","date":"2012-08-08","size":1.8},{"stage":"Series A","date":"2013-04-22","size":5.9},{"stage":"Series B","date":"2014-10-01","size":18.9},{"stage":"Series C","date":"2015-07-12","size":35.0}],"Chime":[{"stage":"Seed","date":"2013-08-30","size":3.8},{"stage":"Series A","date":"2014-11-05","size":8.0},{"stage":"Series B-2","date":"2016-05-19","size":9.0},{"stage":"Series B","date":"2017-09-27","size":18.0},{"stage":"Series C","date":"2018-05-31","size":70.0}],"Databricks":[{"stage":"Series A","date":"2013-09-25","size":13.9},{"stage":"Series B","date":"2014-06-30","size":33.0},{"stage":"Series C","date":"2016-12-15","size":60.0}],"Discord":[{"stage":"Seed","date":"2012-07-11","size":1.1},{"stage":"Series A","date":"2013-11-21","size":8.2},{"stage":"Series C","date":"2016-01-26","size":20.0}],"Netskope":[{"stage":"Series A","date":"2013-01-01","size":5.5},{"stage":"Series B","date":"2013-10-13","size":15.9},{"stage":"Series C","date":"2014-05-15","size":35.0}],"Doordash":[{"stage":"Seed","date":"2013-09-30","size":2.4},{"stage":"Series A","date":"2014-05-22","size":17.3},{"stage":"Series B","date":"2015-03-26","size":40.0},{"stage":"Series C","date":"2016-03-22","size":127.0}],"Robinhood":[{"stage":"Seed","date":"2013-12-01","size":3.0},{"stage":"Series A","date":"2014-09-23","size":13.0},{"stage":"Series B","date":"2015-05-07","size":50.0},{"stage":"Series C","date":"2017-04-26","size":110.0}],"Affirm":[{"stage":"Series A","date":"2014-06-09","size":45.0},{"stage":"Series B","date":"2015-05-06","size":275.0},{"stage":"Series C","date":"2016-04-13","size":100.0}],"Livongo":[{"stage":"Seed","date":"2013-11-01","size":3.0},{"stage":"Series A","date":"2014-09-10","size":10.0},{"stage":"Series B","date":"2015-04-07","size":20.0},{"stage":"Series C","date":"2016-04-12","size":44.5}],"Confluent":[{"stage":"Series A","date":"2014-11-06","size":6.9},{"stage":"Series B","date":"2015-07-08","size":24.0},{"stage":"Series C","date":"2017-03-07","size":50.0}],"SentinelOne":[{"stage":"Seed","date":"2013-08-08","size":2.5},{"stage":"Series A","date":"2014-04-23","size":12.0},{"stage":"Series B","date":"2015-10-13","size":25.0},{"stage":"Series C","date":"2017-01-25","size":70.0}],"Gusto":[{"stage":"Seed","date":"2012-12-11","size":6.1},{"stage":"Series A","date":"2014-02-19","size":20.0},{"stage":"Series B","date":"2015-04-06","size":60.0},{"stage":"Series B-2","date":"2015-12-18","size":90.0},{"stage":"Series C","date":"2018-07-31","size":140.0}],"Plaid":[{"stage":"Seed","date":"2013-09-19","size":2.8},{"stage":"Series A","date":"2014-11-15","size":12.5},{"stage":"Series B","date":"2016-06-19","size":44.0},{"stage":"Series C","date":"2018-12-11","size":250.0}],"Toast":[{"stage":"Series A","date":"2015-06-30","size":3.0},{"stage":"Series B","date":"2016-01-05","size":30.0},{"stage":"Series C","date":"2017-07-25","size":101.0}],"Samsara":[{"stage":"Series A","date":"2015-05-19","size":25.0},{"stage":"Series B","date":"2016-12-01","size":15.0},{"stage":"Series C","date":"2017-06-21","size":40.0}],"Gitlab":[{"stage":"Seed","date":"2015-07-09","size":1.5},{"stage":"Series A","date":"2015-09-17","size":4.0},{"stage":"Series B","date":"2016-09-13","size":20.0},{"stage":"Series C","date":"2017-10-09","size":20.0}],"ServiceTitan":[{"stage":"Series A","date":"2015-06-16","size":19.0},{"stage":"Series B","date":"2017-03-15","size":80.0},{"stage":"Series C","date":"2018-03-23","size":62.0}],"Auth0":[{"stage":"Seed","date":"2014-09-17","size":2.4},{"stage":"Series A","date":"2015-06-24","size":6.9},{"stage":"Series B","date":"2016-08-24","size":15.0},{"stage":"Series C","date":"2017-06-27","size":30.0}],"Rubrik":[{"stage":"Series A","date":"2015-03-24","size":10.0},{"stage":"Series B","date":"2015-05-26","size":41.0},{"stage":"Series C","date":"2016-08-16","size":61.0}],"Figma":[{"stage":"Seed","date":"2013-07-24","size":3.9},{"stage":"Series A","date":"2015-12-03","size":14.0},{"stage":"Series B","date":"2018-02-01","size":25.0},{"stage":"Series C","date":"2019-02-07","size":40.0}],"Lyra Health":[{"stage":"Seed","date":"2015-06-26","size":3.1},{"stage":"Series A","date":"2015-10-15","size":35.0},{"stage":"Series B","date":"2018-05-07","size":65.0},{"stage":"Series C","date":"2020-03-11","size":75.0}],"IonQ":[{"stage":"Series A","date":"2017-07-26","size":20.0},{"stage":"Series B","date":"2019-10-22","size":55.0},{"stage":"Series B-2","date":"2020-06-16","size":7.0}],"Benchling":[{"stage":"Seed","date":"2015-04-16","size":5.0},{"stage":"Series A","date":"2016-10-03","size":7.0},{"stage":"Series B","date":"2018-06-14","size":14.5},{"stage":"Series C","date":"2019-07-14","size":34.5}],"Cerebras":[{"stage":"Series A","date":"2016-05-05","size":27.2},{"stage":"Series B","date":"2017-01-19","size":25.0},{"stage":"Series C","date":"2017-07-01","size":65.0}],"Gong":[{"stage":"Seed","date":"2016-06-21","size":6.0},{"stage":"Series A","date":"2017-07-12","size":20.0},{"stage":"Series A-2","date":"2018-03-06","size":2.0},{"stage":"Series B","date":"2019-02-07","size":40.0},{"stage":"Series C","date":"2022-08-12","size":200.0}],"GoPuff":[{"stage":"Series A","date":"2015-11-10","size":8.3},{"stage":"Series B","date":"2016-12-01","size":13.0},{"stage":"Series C","date":"2017-12-01","size":42.5}],"Groq":[{"stage":"Series A","date":"2017-04-21","size":10.3},{"stage":"Series B","date":"2018-09-05","size":52.3},{"stage":"Series C","date":"2021-04-14","size":300.0}],"Navan":[{"stage":"Seed","date":"2015-05-01","size":4.0},{"stage":"Series A","date":"2017-01-24","size":14.6},{"stage":"Series A-2","date":"2017-10-04","size":12.5},{"stage":"Series B","date":"2018-03-07","size":51.0},{"stage":"Series C","date":"2018-11-08","size":451.0}],"VAST Data":[{"stage":"Series A","date":"2016-01-02","size":15.0},{"stage":"Series A-2","date":"2018-03-13","size":25.0},{"stage":"Series B","date":"2019-02-26","size":40.0},{"stage":"Series C","date":"2020-04-16","size":100.0}],"Klaviyo":[{"stage":"Seed","date":"2015-08-26","size":1.5},{"stage":"Series A","date":"2017-08-18","size":7.0},{"stage":"Series B","date":"2019-04-08","size":150.0},{"stage":"Series C","date":"2020-11-17","size":200.0}],"UiPath":[{"stage":"Seed","date":"2015-07-01","size":1.6},{"stage":"Series A","date":"2017-04-27","size":30.0},{"stage":"Series B","date":"2018-03-06","size":153.0},{"stage":"Series C","date":"2018-09-18","size":225.0}],"Hims & Hers":[{"stage":"Series A","date":"2017-11-02","size":7.0},{"stage":"Series B","date":"2018-06-28","size":50.0},{"stage":"Series C","date":"2019-01-28","size":100.0}],"Applied Intuition":[{"stage":"Series A","date":"2018-09-12","size":11.5},{"stage":"Series B","date":"2019-09-12","size":40.0},{"stage":"Series C","date":"2020-10-22","size":125.0}],"Brex":[{"stage":"Series A","date":"2017-04-01","size":7.0},{"stage":"Series B","date":"2018-06-19","size":57.0},{"stage":"Series C","date":"2018-10-05","size":125.0}],"Commure":[{"stage":"Seed","date":"2017-09-28","size":2.0},{"stage":"Series A","date":"2018-01-01","size":10.0},{"stage":"Series B","date":"2019-04-12","size":27.0}],"Shield AI":[{"stage":"Seed","date":"2016-05-31","size":2.0},{"stage":"Series A","date":"2017-04-03","size":10.5},{"stage":"Series A-2","date":"2018-12-22","size":10.0},{"stage":"Series B","date":"2019-08-20","size":25.0},{"stage":"Series C","date":"2021-02-23","size":70.0}],"Scale":[{"stage":"Seed","date":"2016-08-22","size":0.12},{"stage":"Series A","date":"2017-07-16","size":4.5},{"stage":"Series B","date":"2018-08-07","size":18.0},{"stage":"Series C","date":"2019-08-05","size":100.0}],"Astera Labs":[{"stage":"Series C","date":"2021-09-27","size":50.0}],"Anduril":[{"stage":"Seed","date":"2017-08-11","size":17.5},{"stage":"Series A","date":"2018-06-11","size":41.0},{"stage":"Series B","date":"2019-09-11","size":122.7},{"stage":"Series C","date":"2020-07-01","size":200.0}],"Attentive":[{"stage":"Series A","date":"2018-02-08","size":13.0},{"stage":"Series B","date":"2019-08-12","size":40.0},{"stage":"Series C","date":"2020-01-29","size":70.0},{"stage":"Series C-2","date":"2020-04-15","size":40.0}],"Boring Company":[{"stage":"Series A","date":"2018-04-16","size":113.0},{"stage":"Series B","date":"2019-07-25","size":120.0},{"stage":"Series C","date":"2022-04-20","size":675.0}],"Chainalysis":[{"stage":"Seed","date":"2016-02-19","size":1.6},{"stage":"Series A","date":"2018-04-05","size":16.0},{"stage":"Series B","date":"2019-02-12","size":30.0},{"stage":"Series B-2","date":"2019-04-16","size":6.0},{"stage":"Series B-3","date":"2020-07-07","size":13.0},{"stage":"Series C","date":"2020-11-23","size":100.0}],"Faire":[{"stage":"Seed","date":"2017-11-15","size":3.4},{"stage":"Series A","date":"2018-02-22","size":12.0},{"stage":"Series B","date":"2018-12-13","size":40.0},{"stage":"Series C","date":"2018-12-14","size":60.0}],"Fivetran":[{"stage":"Seed","date":"2017-11-21","size":3.4},{"stage":"Series A","date":"2018-12-04","size":15.0},{"stage":"Series B","date":"2019-09-24","size":44.0},{"stage":"Series C","date":"2020-06-30","size":100.0}],"Flock Safety":[{"stage":"Seed","date":"2017-08-21","size":0.12},{"stage":"Series A","date":"2018-08-30","size":9.6},{"stage":"Series A-2","date":"2018-11-21","size":10.0},{"stage":"Series B","date":"2020-03-20","size":15.9},{"stage":"Series C","date":"2020-11-02","size":45.0}],"Ro":[{"stage":"Seed","date":"2017-11-07","size":3.1},{"stage":"Series A","date":"2018-09-17","size":88.0},{"stage":"Series B","date":"2019-04-16","size":85.0},{"stage":"Series C","date":"2020-07-27","size":200.0}],"Snyk":[{"stage":"Seed","date":"2016-01-27","size":3.0},{"stage":"Series A","date":"2018-03-06","size":7.0},{"stage":"Series B","date":"2018-09-25","size":22.0},{"stage":"Series B-2","date":"2019-09-09","size":70.0},{"stage":"Series C","date":"2020-01-21","size":115.0}],"Verkada":[{"stage":"Seed","date":"2016-10-28","size":3.9},{"stage":"Series A","date":"2018-04-11","size":15.0},{"stage":"Series B","date":"2019-04-25","size":40.0},{"stage":"Series C","date":"2020-01-29","size":80.0}],"Abnormal":[{"stage":"Series A","date":"2019-11-19","size":24.0},{"stage":"Series B","date":"2020-11-18","size":50.0},{"stage":"Series C","date":"2022-05-10","size":210.0}],"Fireblocks":[{"stage":"Series A","date":"2019-06-11","size":16.0},{"stage":"Series C","date":"2020-03-18","size":133.0},{"stage":"Series B","date":"2020-11-18","size":30.0}],"Glean":[{"stage":"Series A","date":"2019-03-01","size":15.0},{"stage":"Series B","date":"2021-03-31","size":40.0},{"stage":"Series C","date":"2022-05-18","size":100.0}],"Hugging Face":[{"stage":"Seed","date":"2018-05-23","size":4.0},{"stage":"Series A","date":"2019-12-17","size":15.0},{"stage":"Series B","date":"2021-03-11","size":40.0},{"stage":"Series C","date":"2022-05-09","size":100.0}],"Notion":[{"stage":"Series A","date":"2019-07-08","size":18.2},{"stage":"Series B","date":"2020-04-02","size":50.0},{"stage":"Series C","date":"2021-10-08","size":275.0}],"OpenAI":[{"stage":"Series A","date":"2019-03-19","size":50.0},{"stage":"Series C","date":"2023-01-31","size":300.0}],"Rippling":[{"stage":"Seed","date":"2017-03-14","size":7.0},{"stage":"Series A","date":"2019-04-03","size":45.0},{"stage":"Series B","date":"2020-08-04","size":145.0},{"stage":"Series C","date":"2021-10-21","size":250.0}],"Vercel":[{"stage":"Series A","date":"2020-04-21","size":21.0},{"stage":"Series B","date":"2020-12-16","size":40.0},{"stage":"Series C","date":"2021-06-21","size":102.0}],"Abridge":[{"stage":"Seed","date":"2018-11-19","size":5.0},{"stage":"Series A","date":"2020-10-06","size":10.0},{"stage":"Series A-2","date":"2022-08-11","size":12.5},{"stage":"Series B","date":"2023-10-26","size":30.0},{"stage":"Series C","date":"2024-02-23","size":150.0}],"Coreweave":[{"stage":"Seed","date":"2018-07-30","size":3.0},{"stage":"Seed-2","date":"2019-02-25","size":1.2},{"stage":"Series A","date":"2019-10-01","size":2.5},{"stage":"Series B","date":"2023-04-20","size":221.0},{"stage":"Series B-2","date":"2023-05-31","size":200.0},{"stage":"Series C","date":"2024-05-01","size":1100.0}],"Deel":[{"stage":"Seed","date":"2019-04-02","size":3.9},{"stage":"Series A","date":"2020-05-21","size":14.0},{"stage":"Series B","date":"2020-09-09","size":30.0},{"stage":"Series C","date":"2021-04-21","size":156.0}],"FalconX":[{"stage":"Series A","date":"2020-05-12","size":17.0},{"stage":"Series B","date":"2020-12-17","size":47.0},{"stage":"Series C","date":"2021-08-10","size":210.0}],"Ramp":[{"stage":"Seed","date":"2019-08-01","size":7.0},{"stage":"Series A","date":"2020-02-12","size":15.0},{"stage":"Series B","date":"2020-12-17","size":30.0},{"stage":"Series B-2","date":"2021-04-08","size":115.0},{"stage":"Series C","date":"2021-08-24","size":300.0},{"stage":"Series C-2","date":"2022-03-21","size":200.0}],"Anthropic":[{"stage":"Series A","date":"2021-05-28","size":124.0},{"stage":"Series B","date":"2022-04-29","size":580.0},{"stage":"Series C","date":"2023-05-23","size":450.0}],"Bilt":[{"stage":"Seed","date":"2020-09-01","size":3.0},{"stage":"Series A","date":"2021-09-21","size":60.0},{"stage":"Series B","date":"2022-10-25","size":150.0}],"Clickhouse":[{"stage":"Series A","date":"2021-09-20","size":50.0},{"stage":"Series B","date":"2021-10-28","size":250.0},{"stage":"Series C","date":"2025-05-29","size":350.0}],"Kalshi":[{"stage":"Seed","date":"2020-05-19","size":6.1},{"stage":"Series A","date":"2021-02-17","size":30.0},{"stage":"Series B","date":"2021-11-03","size":70.0},{"stage":"Series C","date":"2025-06-25","size":185.0}],"Whatnot":[{"stage":"Seed","date":"2020-12-17","size":4.0},{"stage":"Series A","date":"2021-03-04","size":20.0},{"stage":"Series B","date":"2021-05-25","size":50.0},{"stage":"Series C","date":"2021-09-15","size":150.0}],"Baseten":[{"stage":"Seed","date":"2022-04-26","size":8.0},{"stage":"Series A","date":"2022-04-26","size":12.0},{"stage":"Series B","date":"2024-03-04","size":40.0},{"stage":"Series C","date":"2025-02-19","size":75.0}],"Island":[{"stage":"Series A","date":"2022-02-01","size":100.0},{"stage":"Series B","date":"2022-03-23","size":115.0},{"stage":"Series B-2","date":"2022-07-26","size":10.0},{"stage":"Series C-2","date":"2022-11-10","size":60.0},{"stage":"Series C","date":"2023-10-23","size":100.0}],"Polymarket":[{"stage":"Seed","date":"2020-10-19","size":4.0},{"stage":"Series A","date":"2024-05-14","size":25.0},{"stage":"Series B","date":"2024-05-14","size":45.0},{"stage":"Series C","date":"2025-07-15","size":150.0}],"ElevenLabs":[{"stage":"Series C","date":"2015-01-24","size":180.0},{"stage":"Seed","date":"2023-01-22","size":2.0},{"stage":"Series A","date":"2023-06-20","size":19.0},{"stage":"Series B","date":"2024-01-22","size":80.0}],"Harvey":[{"stage":"Seed","date":"2022-11-23","size":5.0},{"stage":"Series A","date":"2023-04-11","size":21.0},{"stage":"Series B","date":"2023-12-19","size":80.0},{"stage":"Series C","date":"2024-07-23","size":100.0}],"Figure AI":[{"stage":"Seed","date":"2022-05-22","size":100.0},{"stage":"Series A","date":"2023-05-24","size":70.0},{"stage":"Series B","date":"2024-02-24","size":675.0},{"stage":"Series C","date":"2025-09-16","size":1000.0}],"Perplexity":[{"stage":"Seed","date":"2022-09-01","size":3.1},{"stage":"Series A","date":"2023-03-28","size":25.6},{"stage":"Series B","date":"2024-01-04","size":73.6},{"stage":"Series C","date":"2024-04-23","size":62.7}],"Cognition":[{"stage":"Series A","date":"2024-03-12","size":21.0},{"stage":"Series A-2","date":"2024-04-24","size":175.0},{"stage":"Series B","date":"2025-03-18","size":300.0},{"stage":"Series C","date":"2025-09-08","size":400.0}],"Cursor":[{"stage":"Seed","date":"2023-07-20","size":8.0},{"stage":"Series A","date":"2024-08-09","size":60.0},{"stage":"Series B","date":"2024-12-19","size":105.0},{"stage":"Series C","date":"2025-05-04","size":900.0}],"Etched":[{"stage":"Seed","date":"2023-05-16","size":5.4},{"stage":"Series A","date":"2024-06-25","size":120.0}],"Mercor":[{"stage":"Seed","date":"2023-09-01","size":3.6},{"stage":"Series A","date":"2024-09-19","size":30.0},{"stage":"Series B","date":"2025-02-20","size":100.0},{"stage":"Series C","date":"2025-10-27","size":350.0}],"Physical Intelligence":[{"stage":"Seed","date":"2024-03-12","size":70.0},{"stage":"Series A","date":"2024-11-24","size":400.0},{"stage":"Series B","date":"2025-11-20","size":600.0}],"Skild AI":[{"stage":"Series A","date":"2024-07-09","size":300.0},{"stage":"Series B","date":"2025-06-11","size":135.0},{"stage":"Series C","date":"2026-01-14","size":1400.0}],"SSI":[{"stage":"Series A","date":"2024-09-04","size":1000.0}],"OpenEvidence":[{"stage":"Seed","date":"2021-11-01","size":3.0},{"stage":"Seed-2","date":"2022-07-27","size":27.0},{"stage":"Series A","date":"2025-02-19","size":75.0},{"stage":"Series B","date":"2025-07-15","size":210.0},{"stage":"Series C","date":"2025-10-20","size":200.0}],"Solana":[{"stage":"Series A","date":"2019-06-30","size":20.0}],"Crusoe":[{"stage":"Seed","date":"2019-03-01","size":4.5},{"stage":"Series A","date":"2019-11-15","size":30.0},{"stage":"Series B","date":"2021-04-06","size":128.0},{"stage":"Series C","date":"2022-04-07","size":350.0}]},"fences":{"Seed":15.6,"Series A":157.9,"Series B":463.6,"Series C":1054.2},"stacked":{"Seed":{"2009 Q3":[{"company":"Uber","date":"2009-08-20","stage":"Seed","size":0.2}],"2009 Q4":[{"company":"WhatsApp","date":"2009-10-01","stage":"Seed","size":0.25}],"2012 Q1":[{"company":"Snowflake","date":"2012-02-01","stage":"Seed","size":0.9}],"2011 Q2":[{"company":"Zoom","date":"2011-06-01","stage":"Seed","size":3.0},{"company":"Datadog","date":"2011-04-29","stage":"Seed","size":1.2}],"2005 Q2":[{"company":"Reddit","date":"2005-06-01","stage":"Seed","size":0.1}],"2011 Q1":[{"company":"Stripe","date":"2011-03-28","stage":"Seed","size":2.0}],"2012 Q3":[{"company":"Upstart","date":"2012-08-08","stage":"Seed","size":1.8},{"company":"Discord","date":"2012-07-11","stage":"Seed","size":1.1},{"company":"Coinbase","date":"2012-09-12","stage":"Seed","size":0.6}],"2012 Q2":[{"company":"Snap","date":"2012-05-01","stage":"Seed","size":0.485}],"2012 Q4":[{"company":"Gusto","date":"2012-12-11","stage":"Seed","size":6.1},{"company":"Instacart","date":"2012-10-15","stage":"Seed","size":2.3}],"2013 Q3":[{"company":"Figma","date":"2013-07-24","stage":"Seed","size":3.9},{"company":"Chime","date":"2013-08-30","stage":"Seed","size":3.8},{"company":"Plaid","date":"2013-09-19","stage":"Seed","size":2.8},{"company":"SentinelOne","date":"2013-08-08","stage":"Seed","size":2.5},{"company":"Doordash","date":"2013-09-30","stage":"Seed","size":2.4}],"2013 Q4":[{"company":"Robinhood","date":"2013-12-01","stage":"Seed","size":3.0},{"company":"Livongo","date":"2013-11-01","stage":"Seed","size":3.0}],"2015 Q3":[{"company":"UiPath","date":"2015-07-01","stage":"Seed","size":1.6},{"company":"Gitlab","date":"2015-07-09","stage":"Seed","size":1.5},{"company":"Klaviyo","date":"2015-08-26","stage":"Seed","size":1.5}],"2014 Q3":[{"company":"Auth0","date":"2014-09-17","stage":"Seed","size":2.4}],"2015 Q2":[{"company":"Benchling","date":"2015-04-16","stage":"Seed","size":5.0},{"company":"Navan","date":"2015-05-01","stage":"Seed","size":4.0},{"company":"Lyra Health","date":"2015-06-26","stage":"Seed","size":3.1}],"2016 Q2":[{"company":"Gong","date":"2016-06-21","stage":"Seed","size":6.0},{"company":"Shield AI","date":"2016-05-31","stage":"Seed","size":2.0}],"2017 Q3":[{"company":"Anduril","date":"2017-08-11","stage":"Seed","size":17.5},{"company":"Commure","date":"2017-09-28","stage":"Seed","size":2.0},{"company":"Flock Safety","date":"2017-08-21","stage":"Seed","size":0.12}],"2016 Q3":[{"company":"Scale","date":"2016-08-22","stage":"Seed","size":0.12}],"2016 Q1":[{"company":"Snyk","date":"2016-01-27","stage":"Seed","size":3.0},{"company":"Chainalysis","date":"2016-02-19","stage":"Seed","size":1.6}],"2017 Q4":[{"company":"Faire","date":"2017-11-15","stage":"Seed","size":3.4},{"company":"Fivetran","date":"2017-11-21","stage":"Seed","size":3.4},{"company":"Ro","date":"2017-11-07","stage":"Seed","size":3.1}],"2016 Q4":[{"company":"Verkada","date":"2016-10-28","stage":"Seed","size":3.9}],"2018 Q2":[{"company":"Hugging Face","date":"2018-05-23","stage":"Seed","size":4.0}],"2017 Q1":[{"company":"Rippling","date":"2017-03-14","stage":"Seed","size":7.0}],"2018 Q4":[{"company":"Abridge","date":"2018-11-19","stage":"Seed","size":5.0}],"2018 Q3":[{"company":"Coreweave","date":"2018-07-30","stage":"Seed","size":3.0}],"2019 Q1":[{"company":"Crusoe","date":"2019-03-01","stage":"Seed","size":4.5},{"company":"Coreweave","date":"2019-02-25","stage":"Seed-2","size":1.2}],"2019 Q2":[{"company":"Deel","date":"2019-04-02","stage":"Seed","size":3.9}],"2019 Q3":[{"company":"Ramp","date":"2019-08-01","stage":"Seed","size":7.0}],"2020 Q3":[{"company":"Bilt","date":"2020-09-01","stage":"Seed","size":3.0}],"2020 Q2":[{"company":"Kalshi","date":"2020-05-19","stage":"Seed","size":6.1}],"2020 Q4":[{"company":"Whatnot","date":"2020-12-17","stage":"Seed","size":4.0},{"company":"Polymarket","date":"2020-10-19","stage":"Seed","size":4.0}],"2022 Q2":[{"company":"Figure AI","date":"2022-05-22","stage":"Seed","size":100.0},{"company":"Baseten","date":"2022-04-26","stage":"Seed","size":8.0}],"2023 Q1":[{"company":"ElevenLabs","date":"2023-01-22","stage":"Seed","size":2.0}],"2022 Q4":[{"company":"Harvey","date":"2022-11-23","stage":"Seed","size":5.0}],"2022 Q3":[{"company":"OpenEvidence","date":"2022-07-27","stage":"Seed-2","size":27.0},{"company":"Perplexity","date":"2022-09-01","stage":"Seed","size":3.1}],"2023 Q3":[{"company":"Cursor","date":"2023-07-20","stage":"Seed","size":8.0},{"company":"Mercor","date":"2023-09-01","stage":"Seed","size":3.6}],"2023 Q2":[{"company":"Etched","date":"2023-05-16","stage":"Seed","size":5.4}],"2024 Q1":[{"company":"Physical Intelligence","date":"2024-03-12","stage":"Seed","size":70.0}],"2021 Q4":[{"company":"OpenEvidence","date":"2021-11-01","stage":"Seed","size":3.0}]},"Series A":{"2011 Q1":[{"company":"Uber","date":"2011-02-14","stage":"Series A","size":11.0},{"company":"Doximity","date":"2011-03-16","stage":"Series A","size":10.8}],"2011 Q4":[{"company":"Duolingo","date":"2011-10-19","stage":"Series A","size":3.3},{"company":"Freshworks","date":"2011-12-02","stage":"Series A","size":1.0}],"2011 Q2":[{"company":"WhatsApp","date":"2011-04-08","stage":"Series A","size":8.0}],"2012 Q3":[{"company":"Github","date":"2012-07-09","stage":"Series A","size":100.0},{"company":"Snowflake","date":"2012-08-01","stage":"Series A","size":5.0}],"2012 Q4":[{"company":"Elastic","date":"2012-11-08","stage":"Series A","size":10.0},{"company":"Datadog","date":"2012-11-21","stage":"Series A","size":6.2},{"company":"Reddit","date":"2012-12-03","stage":"Series A","size":1.0}],"2012 Q2":[{"company":"Qualtrics","date":"2012-05-15","stage":"Series A","size":70.0}],"2012 Q1":[{"company":"Stripe","date":"2012-02-09","stage":"Series A","size":18.0}],"2013 Q2":[{"company":"Instacart","date":"2013-04-04","stage":"Series A","size":8.5},{"company":"Coinbase","date":"2013-05-07","stage":"Series A","size":6.1},{"company":"Upstart","date":"2013-04-22","stage":"Series A","size":5.9}],"2013 Q1":[{"company":"Snap","date":"2013-02-08","stage":"Series A","size":13.5},{"company":"Zoom","date":"2013-01-28","stage":"Series A","size":6.0},{"company":"Netskope","date":"2013-01-01","stage":"Series A","size":5.5}],"2013 Q4":[{"company":"Chewy","date":"2013-10-24","stage":"Series A","size":15.0},{"company":"Discord","date":"2013-11-21","stage":"Series A","size":8.2}],"2014 Q4":[{"company":"Plaid","date":"2014-11-15","stage":"Series A","size":12.5},{"company":"Chime","date":"2014-11-05","stage":"Series A","size":8.0},{"company":"Confluent","date":"2014-11-06","stage":"Series A","size":6.9}],"2013 Q3":[{"company":"Databricks","date":"2013-09-25","stage":"Series A","size":13.9}],"2014 Q2":[{"company":"Affirm","date":"2014-06-09","stage":"Series A","size":45.0},{"company":"Doordash","date":"2014-05-22","stage":"Series A","size":17.3},{"company":"SentinelOne","date":"2014-04-23","stage":"Series A","size":12.0}],"2014 Q3":[{"company":"Robinhood","date":"2014-09-23","stage":"Series A","size":13.0},{"company":"Livongo","date":"2014-09-10","stage":"Series A","size":10.0}],"2014 Q1":[{"company":"Gusto","date":"2014-02-19","stage":"Series A","size":20.0}],"2015 Q2":[{"company":"Samsara","date":"2015-05-19","stage":"Series A","size":25.0},{"company":"ServiceTitan","date":"2015-06-16","stage":"Series A","size":19.0},{"company":"Auth0","date":"2015-06-24","stage":"Series A","size":6.9},{"company":"Toast","date":"2015-06-30","stage":"Series A","size":3.0}],"2015 Q3":[{"company":"Gitlab","date":"2015-09-17","stage":"Series A","size":4.0}],"2015 Q1":[{"company":"Rubrik","date":"2015-03-24","stage":"Series A","size":10.0}],"2015 Q4":[{"company":"Lyra Health","date":"2015-10-15","stage":"Series A","size":35.0},{"company":"Figma","date":"2015-12-03","stage":"Series A","size":14.0},{"company":"GoPuff","date":"2015-11-10","stage":"Series A","size":8.3}],"2017 Q3":[{"company":"IonQ","date":"2017-07-26","stage":"Series A","size":20.0},{"company":"Gong","date":"2017-07-12","stage":"Series A","size":20.0},{"company":"Klaviyo","date":"2017-08-18","stage":"Series A","size":7.0},{"company":"Scale","date":"2017-07-16","stage":"Series A","size":4.5}],"2016 Q4":[{"company":"Benchling","date":"2016-10-03","stage":"Series A","size":7.0}],"2016 Q2":[{"company":"Cerebras","date":"2016-05-05","stage":"Series A","size":27.2}],"2018 Q1":[{"company":"VAST Data","date":"2018-03-13","stage":"Series A-2","size":25.0},{"company":"Attentive","date":"2018-02-08","stage":"Series A","size":13.0},{"company":"Faire","date":"2018-02-22","stage":"Series A","size":12.0},{"company":"Commure","date":"2018-01-01","stage":"Series A","size":10.0},{"company":"Snyk","date":"2018-03-06","stage":"Series A","size":7.0},{"company":"Gong","date":"2018-03-06","stage":"Series A-2","size":2.0}],"2017 Q2":[{"company":"UiPath","date":"2017-04-27","stage":"Series A","size":30.0},{"company":"Shield AI","date":"2017-04-03","stage":"Series A","size":10.5},{"company":"Groq","date":"2017-04-21","stage":"Series A","size":10.3},{"company":"Brex","date":"2017-04-01","stage":"Series A","size":7.0}],"2017 Q1":[{"company":"Navan","date":"2017-01-24","stage":"Series A","size":14.6}],"2017 Q4":[{"company":"Navan","date":"2017-10-04","stage":"Series A-2","size":12.5},{"company":"Hims & Hers","date":"2017-11-02","stage":"Series A","size":7.0}],"2016 Q1":[{"company":"VAST Data","date":"2016-01-02","stage":"Series A","size":15.0}],"2018 Q3":[{"company":"Ro","date":"2018-09-17","stage":"Series A","size":88.0},{"company":"Applied Intuition","date":"2018-09-12","stage":"Series A","size":11.5},{"company":"Flock Safety","date":"2018-08-30","stage":"Series A","size":9.6}],"2018 Q4":[{"company":"Fivetran","date":"2018-12-04","stage":"Series A","size":15.0},{"company":"Shield AI","date":"2018-12-22","stage":"Series A-2","size":10.0},{"company":"Flock Safety","date":"2018-11-21","stage":"Series A-2","size":10.0}],"2018 Q2":[{"company":"Boring Company","date":"2018-04-16","stage":"Series A","size":113.0},{"company":"Anduril","date":"2018-06-11","stage":"Series A","size":41.0},{"company":"Chainalysis","date":"2018-04-05","stage":"Series A","size":16.0},{"company":"Verkada","date":"2018-04-11","stage":"Series A","size":15.0}],"2019 Q4":[{"company":"Crusoe","date":"2019-11-15","stage":"Series A","size":30.0},{"company":"Abnormal","date":"2019-11-19","stage":"Series A","size":24.0},{"company":"Hugging Face","date":"2019-12-17","stage":"Series A","size":15.0},{"company":"Coreweave","date":"2019-10-01","stage":"Series A","size":2.5}],"2019 Q2":[{"company":"Rippling","date":"2019-04-03","stage":"Series A","size":45.0},{"company":"Solana","date":"2019-06-30","stage":"Series A","size":20.0},{"company":"Fireblocks","date":"2019-06-11","stage":"Series A","size":16.0}],"2019 Q1":[{"company":"OpenAI","date":"2019-03-19","stage":"Series A","size":50.0},{"company":"Glean","date":"2019-03-01","stage":"Series A","size":15.0}],"2019 Q3":[{"company":"Notion","date":"2019-07-08","stage":"Series A","size":18.2}],"2020 Q2":[{"company":"Vercel","date":"2020-04-21","stage":"Series A","size":21.0},{"company":"FalconX","date":"2020-05-12","stage":"Series A","size":17.0},{"company":"Deel","date":"2020-05-21","stage":"Series A","size":14.0}],"2020 Q4":[{"company":"Abridge","date":"2020-10-06","stage":"Series A","size":10.0}],"2022 Q3":[{"company":"Abridge","date":"2022-08-11","stage":"Series A-2","size":12.5}],"2020 Q1":[{"company":"Ramp","date":"2020-02-12","stage":"Series A","size":15.0}],"2021 Q2":[{"company":"Anthropic","date":"2021-05-28","stage":"Series A","size":124.0}],"2021 Q3":[{"company":"Bilt","date":"2021-09-21","stage":"Series A","size":60.0},{"company":"Clickhouse","date":"2021-09-20","stage":"Series A","size":50.0}],"2021 Q1":[{"company":"Kalshi","date":"2021-02-17","stage":"Series A","size":30.0},{"company":"Whatnot","date":"2021-03-04","stage":"Series A","size":20.0}],"2022 Q2":[{"company":"Baseten","date":"2022-04-26","stage":"Series A","size":12.0}],"2022 Q1":[{"company":"Island","date":"2022-02-01","stage":"Series A","size":100.0}],"2024 Q2":[{"company":"Cognition","date":"2024-04-24","stage":"Series A-2","size":175.0},{"company":"Etched","date":"2024-06-25","stage":"Series A","size":120.0},{"company":"Polymarket","date":"2024-05-14","stage":"Series A","size":25.0}],"2023 Q2":[{"company":"Figure AI","date":"2023-05-24","stage":"Series A","size":70.0},{"company":"Harvey","date":"2023-04-11","stage":"Series A","size":21.0},{"company":"ElevenLabs","date":"2023-06-20","stage":"Series A","size":19.0}],"2023 Q1":[{"company":"Perplexity","date":"2023-03-28","stage":"Series A","size":25.6}],"2024 Q1":[{"company":"Cognition","date":"2024-03-12","stage":"Series A","size":21.0}],"2024 Q3":[{"company":"SSI","date":"2024-09-04","stage":"Series A","size":1000.0},{"company":"Skild AI","date":"2024-07-09","stage":"Series A","size":300.0},{"company":"Cursor","date":"2024-08-09","stage":"Series A","size":60.0},{"company":"Mercor","date":"2024-09-19","stage":"Series A","size":30.0}],"2024 Q4":[{"company":"Physical Intelligence","date":"2024-11-24","stage":"Series A","size":400.0}],"2025 Q1":[{"company":"OpenEvidence","date":"2025-02-19","stage":"Series A","size":75.0}]},"Series B":{"2011 Q4":[{"company":"Uber","date":"2011-12-07","stage":"Series B","size":37.0}],"2012 Q3":[{"company":"Stripe","date":"2012-07-09","stage":"Series B","size":20.0},{"company":"Doximity","date":"2012-09-05","stage":"Series B","size":17.0},{"company":"Duolingo","date":"2012-09-17","stage":"Series B","size":15.0}],"2013 Q3":[{"company":"WhatsApp","date":"2013-07-01","stage":"Series B","size":52.0},{"company":"Zoom","date":"2013-09-24","stage":"Series B","size":6.5}],"2012 Q2":[{"company":"Freshworks","date":"2012-04-26","stage":"Series B","size":5.0}],"2014 Q4":[{"company":"Snowflake","date":"2014-10-21","stage":"Series B","size":26.0},{"company":"Upstart","date":"2014-10-01","stage":"Series B","size":18.9}],"2014 Q1":[{"company":"Datadog","date":"2014-02-04","stage":"Series B","size":15.0}],"2014 Q3":[{"company":"Qualtrics","date":"2014-09-24","stage":"Series B","size":150.0},{"company":"Reddit","date":"2014-09-30","stage":"Series B","size":50.0}],"2013 Q1":[{"company":"Elastic","date":"2013-02-19","stage":"Series B","size":24.0}],"2015 Q3":[{"company":"Github","date":"2015-07-29","stage":"Series B","size":250.0},{"company":"Confluent","date":"2015-07-08","stage":"Series B","size":24.0}],"2013 Q4":[{"company":"Coinbase","date":"2013-12-12","stage":"Series B","size":25.0},{"company":"Netskope","date":"2013-10-13","stage":"Series B","size":15.9}],"2013 Q2":[{"company":"Snap","date":"2013-06-22","stage":"Series B","size":80.0}],"2014 Q2":[{"company":"Instacart","date":"2014-06-16","stage":"Series B","size":45.0},{"company":"Databricks","date":"2014-06-30","stage":"Series B","size":33.0},{"company":"Chewy","date":"2014-04-02","stage":"Series B","size":30.0}],"2017 Q3":[{"company":"Chime","date":"2017-09-27","stage":"Series B","size":18.0}],"2016 Q2":[{"company":"Plaid","date":"2016-06-19","stage":"Series B","size":44.0},{"company":"Chime","date":"2016-05-19","stage":"Series B-2","size":9.0}],"2015 Q1":[{"company":"Doordash","date":"2015-03-26","stage":"Series B","size":40.0}],"2015 Q2":[{"company":"Affirm","date":"2015-05-06","stage":"Series B","size":275.0},{"company":"Gusto","date":"2015-04-06","stage":"Series B","size":60.0},{"company":"Robinhood","date":"2015-05-07","stage":"Series B","size":50.0},{"company":"Rubrik","date":"2015-05-26","stage":"Series B","size":41.0},{"company":"Livongo","date":"2015-04-07","stage":"Series B","size":20.0}],"2015 Q4":[{"company":"Gusto","date":"2015-12-18","stage":"Series B-2","size":90.0},{"company":"SentinelOne","date":"2015-10-13","stage":"Series B","size":25.0}],"2016 Q1":[{"company":"Toast","date":"2016-01-05","stage":"Series B","size":30.0}],"2016 Q4":[{"company":"Samsara","date":"2016-12-01","stage":"Series B","size":15.0},{"company":"GoPuff","date":"2016-12-01","stage":"Series B","size":13.0}],"2016 Q3":[{"company":"Gitlab","date":"2016-09-13","stage":"Series B","size":20.0},{"company":"Auth0","date":"2016-08-24","stage":"Series B","size":15.0}],"2017 Q1":[{"company":"ServiceTitan","date":"2017-03-15","stage":"Series B","size":80.0},{"company":"Cerebras","date":"2017-01-19","stage":"Series B","size":25.0}],"2018 Q1":[{"company":"UiPath","date":"2018-03-06","stage":"Series B","size":153.0},{"company":"Navan","date":"2018-03-07","stage":"Series B","size":51.0},{"company":"Figma","date":"2018-02-01","stage":"Series B","size":25.0}],"2018 Q2":[{"company":"Lyra Health","date":"2018-05-07","stage":"Series B","size":65.0},{"company":"Brex","date":"2018-06-19","stage":"Series B","size":57.0},{"company":"Hims & Hers","date":"2018-06-28","stage":"Series B","size":50.0},{"company":"Benchling","date":"2018-06-14","stage":"Series B","size":14.5}],"2019 Q4":[{"company":"IonQ","date":"2019-10-22","stage":"Series B","size":55.0}],"2020 Q2":[{"company":"Notion","date":"2020-04-02","stage":"Series B","size":50.0},{"company":"IonQ","date":"2020-06-16","stage":"Series B-2","size":7.0}],"2019 Q1":[{"company":"Gong","date":"2019-02-07","stage":"Series B","size":40.0},{"company":"VAST Data","date":"2019-02-26","stage":"Series B","size":40.0},{"company":"Chainalysis","date":"2019-02-12","stage":"Series B","size":30.0}],"2018 Q3":[{"company":"Groq","date":"2018-09-05","stage":"Series B","size":52.3},{"company":"Snyk","date":"2018-09-25","stage":"Series B","size":22.0},{"company":"Scale","date":"2018-08-07","stage":"Series B","size":18.0}],"2019 Q2":[{"company":"Klaviyo","date":"2019-04-08","stage":"Series B","size":150.0},{"company":"Ro","date":"2019-04-16","stage":"Series B","size":85.0},{"company":"Verkada","date":"2019-04-25","stage":"Series B","size":40.0},{"company":"Commure","date":"2019-04-12","stage":"Series B","size":27.0},{"company":"Chainalysis","date":"2019-04-16","stage":"Series B-2","size":6.0}],"2019 Q3":[{"company":"Anduril","date":"2019-09-11","stage":"Series B","size":122.7},{"company":"Boring Company","date":"2019-07-25","stage":"Series B","size":120.0},{"company":"Snyk","date":"2019-09-09","stage":"Series B-2","size":70.0},{"company":"Fivetran","date":"2019-09-24","stage":"Series B","size":44.0},{"company":"Applied Intuition","date":"2019-09-12","stage":"Series B","size":40.0},{"company":"Attentive","date":"2019-08-12","stage":"Series B","size":40.0},{"company":"Shield AI","date":"2019-08-20","stage":"Series B","size":25.0}],"2020 Q3":[{"company":"Rippling","date":"2020-08-04","stage":"Series B","size":145.0},{"company":"Deel","date":"2020-09-09","stage":"Series B","size":30.0},{"company":"Chainalysis","date":"2020-07-07","stage":"Series B-3","size":13.0}],"2018 Q4":[{"company":"Faire","date":"2018-12-13","stage":"Series B","size":40.0}],"2020 Q1":[{"company":"Flock Safety","date":"2020-03-20","stage":"Series B","size":15.9}],"2020 Q4":[{"company":"Abnormal","date":"2020-11-18","stage":"Series B","size":50.0},{"company":"FalconX","date":"2020-12-17","stage":"Series B","size":47.0},{"company":"Vercel","date":"2020-12-16","stage":"Series B","size":40.0},{"company":"Fireblocks","date":"2020-11-18","stage":"Series B","size":30.0},{"company":"Ramp","date":"2020-12-17","stage":"Series B","size":30.0}],"2021 Q1":[{"company":"Glean","date":"2021-03-31","stage":"Series B","size":40.0},{"company":"Hugging Face","date":"2021-03-11","stage":"Series B","size":40.0}],"2023 Q4":[{"company":"Harvey","date":"2023-12-19","stage":"Series B","size":80.0},{"company":"Abridge","date":"2023-10-26","stage":"Series B","size":30.0}],"2023 Q2":[{"company":"Coreweave","date":"2023-04-20","stage":"Series B","size":221.0},{"company":"Coreweave","date":"2023-05-31","stage":"Series B-2","size":200.0}],"2021 Q2":[{"company":"Crusoe","date":"2021-04-06","stage":"Series B","size":128.0},{"company":"Ramp","date":"2021-04-08","stage":"Series B-2","size":115.0},{"company":"Whatnot","date":"2021-05-25","stage":"Series B","size":50.0}],"2022 Q2":[{"company":"Anthropic","date":"2022-04-29","stage":"Series B","size":580.0}],"2022 Q4":[{"company":"Bilt","date":"2022-10-25","stage":"Series B","size":150.0}],"2021 Q4":[{"company":"Clickhouse","date":"2021-10-28","stage":"Series B","size":250.0},{"company":"Kalshi","date":"2021-11-03","stage":"Series B","size":70.0}],"2024 Q1":[{"company":"Figure AI","date":"2024-02-24","stage":"Series B","size":675.0},{"company":"ElevenLabs","date":"2024-01-22","stage":"Series B","size":80.0},{"company":"Perplexity","date":"2024-01-04","stage":"Series B","size":73.6},{"company":"Baseten","date":"2024-03-04","stage":"Series B","size":40.0}],"2022 Q1":[{"company":"Island","date":"2022-03-23","stage":"Series B","size":115.0}],"2022 Q3":[{"company":"Island","date":"2022-07-26","stage":"Series B-2","size":10.0}],"2024 Q2":[{"company":"Polymarket","date":"2024-05-14","stage":"Series B","size":45.0}],"2025 Q1":[{"company":"Cognition","date":"2025-03-18","stage":"Series B","size":300.0},{"company":"Mercor","date":"2025-02-20","stage":"Series B","size":100.0}],"2024 Q4":[{"company":"Cursor","date":"2024-12-19","stage":"Series B","size":105.0}],"2025 Q4":[{"company":"Physical Intelligence","date":"2025-11-20","stage":"Series B","size":600.0}],"2025 Q2":[{"company":"Skild AI","date":"2025-06-11","stage":"Series B","size":135.0}],"2025 Q3":[{"company":"OpenEvidence","date":"2025-07-15","stage":"Series B","size":210.0}]},"Series C":{"2013 Q3":[{"company":"Uber","date":"2013-08-23","stage":"Series C","size":363.0}],"2014 Q1":[{"company":"Stripe","date":"2014-01-22","stage":"Series C","size":80.0},{"company":"Duolingo","date":"2014-02-18","stage":"Series C","size":20.0}],"2014 Q2":[{"company":"Elastic","date":"2014-06-05","stage":"Series C","size":70.0},{"company":"Doximity","date":"2014-04-29","stage":"Series C","size":54.0},{"company":"Netskope","date":"2014-05-15","stage":"Series C","size":35.0}],"2013 Q4":[{"company":"Snap","date":"2013-12-11","stage":"Series C","size":54.5},{"company":"Freshworks","date":"2013-11-21","stage":"Series C","size":7.0}],"2015 Q2":[{"company":"Snowflake","date":"2015-06-23","stage":"Series C","size":79.0}],"2015 Q1":[{"company":"Instacart","date":"2015-01-13","stage":"Series C","size":220.0},{"company":"ElevenLabs","date":"2015-01-24","stage":"Series C","size":180.0},{"company":"Coinbase","date":"2015-01-13","stage":"Series C","size":75.0},{"company":"Datadog","date":"2015-01-28","stage":"Series C","size":31.0},{"company":"Zoom","date":"2015-02-04","stage":"Series C","size":30.0}],"2017 Q3":[{"company":"Reddit","date":"2017-07-31","stage":"Series C","size":200.0},{"company":"Toast","date":"2017-07-25","stage":"Series C","size":101.0},{"company":"Cerebras","date":"2017-07-01","stage":"Series C","size":65.0}],"2017 Q2":[{"company":"Qualtrics","date":"2017-04-12","stage":"Series C","size":180.0},{"company":"Robinhood","date":"2017-04-26","stage":"Series C","size":110.0},{"company":"Samsara","date":"2017-06-21","stage":"Series C","size":40.0},{"company":"Auth0","date":"2017-06-27","stage":"Series C","size":30.0}],"2014 Q4":[{"company":"Stripe","date":"2014-12-02","stage":"Series C-2","size":70.0}],"2015 Q3":[{"company":"Stripe","date":"2015-07-28","stage":"Series C-3","size":100.0},{"company":"Upstart","date":"2015-07-12","stage":"Series C","size":35.0}],"2016 Q3":[{"company":"Rubrik","date":"2016-08-16","stage":"Series C","size":61.0},{"company":"Coinbase","date":"2016-07-07","stage":"Series C-2","size":10.5}],"2014 Q3":[{"company":"Chewy","date":"2014-08-01","stage":"Series C","size":41.0}],"2018 Q2":[{"company":"Chime","date":"2018-05-31","stage":"Series C","size":70.0}],"2016 Q4":[{"company":"Databricks","date":"2016-12-15","stage":"Series C","size":60.0}],"2016 Q1":[{"company":"Doordash","date":"2016-03-22","stage":"Series C","size":127.0},{"company":"Discord","date":"2016-01-26","stage":"Series C","size":20.0}],"2016 Q2":[{"company":"Affirm","date":"2016-04-13","stage":"Series C","size":100.0},{"company":"Livongo","date":"2016-04-12","stage":"Series C","size":44.5}],"2017 Q1":[{"company":"SentinelOne","date":"2017-01-25","stage":"Series C","size":70.0},{"company":"Confluent","date":"2017-03-07","stage":"Series C","size":50.0}],"2018 Q3":[{"company":"UiPath","date":"2018-09-18","stage":"Series C","size":225.0},{"company":"Gusto","date":"2018-07-31","stage":"Series C","size":140.0}],"2018 Q4":[{"company":"Navan","date":"2018-11-08","stage":"Series C","size":451.0},{"company":"Plaid","date":"2018-12-11","stage":"Series C","size":250.0},{"company":"Brex","date":"2018-10-05","stage":"Series C","size":125.0},{"company":"Faire","date":"2018-12-14","stage":"Series C","size":60.0}],"2017 Q4":[{"company":"GoPuff","date":"2017-12-01","stage":"Series C","size":42.5},{"company":"Gitlab","date":"2017-10-09","stage":"Series C","size":20.0}],"2018 Q1":[{"company":"ServiceTitan","date":"2018-03-23","stage":"Series C","size":62.0}],"2019 Q1":[{"company":"Hims & Hers","date":"2019-01-28","stage":"Series C","size":100.0},{"company":"Figma","date":"2019-02-07","stage":"Series C","size":40.0}],"2020 Q1":[{"company":"Fireblocks","date":"2020-03-18","stage":"Series C","size":133.0},{"company":"Snyk","date":"2020-01-21","stage":"Series C","size":115.0},{"company":"Verkada","date":"2020-01-29","stage":"Series C","size":80.0},{"company":"Lyra Health","date":"2020-03-11","stage":"Series C","size":75.0},{"company":"Attentive","date":"2020-01-29","stage":"Series C","size":70.0}],"2019 Q3":[{"company":"Scale","date":"2019-08-05","stage":"Series C","size":100.0},{"company":"Benchling","date":"2019-07-14","stage":"Series C","size":34.5}],"2022 Q3":[{"company":"Gong","date":"2022-08-12","stage":"Series C","size":200.0}],"2021 Q2":[{"company":"Groq","date":"2021-04-14","stage":"Series C","size":300.0},{"company":"Deel","date":"2021-04-21","stage":"Series C","size":156.0},{"company":"Vercel","date":"2021-06-21","stage":"Series C","size":102.0}],"2020 Q2":[{"company":"VAST Data","date":"2020-04-16","stage":"Series C","size":100.0},{"company":"Fivetran","date":"2020-06-30","stage":"Series C","size":100.0},{"company":"Attentive","date":"2020-04-15","stage":"Series C-2","size":40.0}],"2020 Q4":[{"company":"Klaviyo","date":"2020-11-17","stage":"Series C","size":200.0},{"company":"Applied Intuition","date":"2020-10-22","stage":"Series C","size":125.0},{"company":"Chainalysis","date":"2020-11-23","stage":"Series C","size":100.0},{"company":"Flock Safety","date":"2020-11-02","stage":"Series C","size":45.0}],"2021 Q1":[{"company":"Shield AI","date":"2021-02-23","stage":"Series C","size":70.0}],"2021 Q3":[{"company":"Ramp","date":"2021-08-24","stage":"Series C","size":300.0},{"company":"FalconX","date":"2021-08-10","stage":"Series C","size":210.0},{"company":"Whatnot","date":"2021-09-15","stage":"Series C","size":150.0},{"company":"Astera Labs","date":"2021-09-27","stage":"Series C","size":50.0}],"2020 Q3":[{"company":"Anduril","date":"2020-07-01","stage":"Series C","size":200.0},{"company":"Ro","date":"2020-07-27","stage":"Series C","size":200.0}],"2022 Q2":[{"company":"Boring Company","date":"2022-04-20","stage":"Series C","size":675.0},{"company":"Crusoe","date":"2022-04-07","stage":"Series C","size":350.0},{"company":"Abnormal","date":"2022-05-10","stage":"Series C","size":210.0},{"company":"Glean","date":"2022-05-18","stage":"Series C","size":100.0},{"company":"Hugging Face","date":"2022-05-09","stage":"Series C","size":100.0}],"2021 Q4":[{"company":"Notion","date":"2021-10-08","stage":"Series C","size":275.0},{"company":"Rippling","date":"2021-10-21","stage":"Series C","size":250.0}],"2023 Q1":[{"company":"OpenAI","date":"2023-01-31","stage":"Series C","size":300.0}],"2024 Q1":[{"company":"Abridge","date":"2024-02-23","stage":"Series C","size":150.0}],"2024 Q2":[{"company":"Coreweave","date":"2024-05-01","stage":"Series C","size":1100.0},{"company":"Perplexity","date":"2024-04-23","stage":"Series C","size":62.7}],"2022 Q1":[{"company":"Ramp","date":"2022-03-21","stage":"Series C-2","size":200.0}],"2023 Q2":[{"company":"Anthropic","date":"2023-05-23","stage":"Series C","size":450.0}],"2025 Q2":[{"company":"Cursor","date":"2025-05-04","stage":"Series C","size":900.0},{"company":"Clickhouse","date":"2025-05-29","stage":"Series C","size":350.0},{"company":"Kalshi","date":"2025-06-25","stage":"Series C","size":185.0}],"2025 Q1":[{"company":"Baseten","date":"2025-02-19","stage":"Series C","size":75.0}],"2023 Q4":[{"company":"Island","date":"2023-10-23","stage":"Series C","size":100.0}],"2022 Q4":[{"company":"Island","date":"2022-11-10","stage":"Series C-2","size":60.0}],"2025 Q3":[{"company":"Figure AI","date":"2025-09-16","stage":"Series C","size":1000.0},{"company":"Cognition","date":"2025-09-08","stage":"Series C","size":400.0},{"company":"Polymarket","date":"2025-07-15","stage":"Series C","size":150.0}],"2024 Q3":[{"company":"Harvey","date":"2024-07-23","stage":"Series C","size":100.0}],"2025 Q4":[{"company":"Mercor","date":"2025-10-27","stage":"Series C","size":350.0},{"company":"OpenEvidence","date":"2025-10-20","stage":"Series C","size":200.0}],"2026 Q1":[{"company":"Skild AI","date":"2026-01-14","stage":"Series C","size":1400.0}]}}};
+
+const REGIME_COLOR = {
+  'Extreme Hot': '#B03030',
+  'Hot':         '#D4722A',
+  'Neutral':     '#888780',
+  'Cold':        '#3A7BBF',
+  'Extreme Cold':'#1A4E7A'
+};
+const STAGE_COLORS = {
+  'Seed':     '#1A6B3A',
+  'Series A': '#185FA5',
+  'Series B': '#534AB7',
+  'Series C': '#0F6E56'
+};
+const LINE_COLORS = {
+  'Seed':     '#1A6B3A',
+  'Series A': '#D4722A',
+  'Series B': '#7C3AED',
+  'Series C': '#0891B2'
+};
+const STAGES = ['Seed','Series A','Series B','Series C'];
+
+function niceCeil(v) {
+  if (v <= 0) return 100;
+  const pow = Math.pow(10, Math.floor(Math.log10(v)));
+  const norm = v / pow;
+  let nice;
+  if (norm <= 1) nice = 1;
+  else if (norm <= 1.5) nice = 1.5;
+  else if (norm <= 2) nice = 2;
+  else if (norm <= 2.5) nice = 2.5;
+  else if (norm <= 3) nice = 3;
+  else if (norm <= 4) nice = 4;
+  else if (norm <= 5) nice = 5;
+  else if (norm <= 6) nice = 6;
+  else if (norm <= 8) nice = 8;
+  else nice = 10;
+  return nice * pow;
+}
+
+/* ===================== SECTION 1: deployment column charts ===================== */
+const deployCharts = [];
+
+function buildDeployCharts() {
+  const container = document.getElementById('deploy-charts');
+  STAGES.forEach(stage => {
+    const rows = DATA.deploy[stage];
+    const labels = rows.map(r => r.period);
+    const values = rows.map(r => r.deploy_b);
+    const baseColors = rows.map(r => REGIME_COLOR[r.regime]);
+
+    const wrap = document.createElement('div');
+    wrap.className = 'stage-wrap';
+    const lbl = document.createElement('div');
+    lbl.className = 'stage-label';
+    lbl.textContent = stage;
+    wrap.appendChild(lbl);
+    const cw = document.createElement('div');
+    cw.className = 'chart-wrap';
+    const canvas = document.createElement('canvas');
+    canvas.setAttribute('role', 'img');
+    canvas.setAttribute('aria-label', stage + ' quarterly deployment colored by regime');
+    canvas.textContent = stage + ' deployment data, color-coded by regime.';
+    cw.appendChild(canvas);
+    wrap.appendChild(cw);
+    container.appendChild(wrap);
+
+    const chart = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          data: values,
+          backgroundColor: baseColors.slice(),
+          borderRadius: 2,
+          borderSkipped: false,
+          barPercentage: 0.85,
+          categoryPercentage: 0.95,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, animation: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              title: ctx => ctx[0].label,
+              label: ctx => {
+                const r = rows[ctx.dataIndex];
+                return [`$${r.deploy_b.toFixed(1)}B`, `${r.regime} (z=${r.z >= 0 ? '+' : ''}${r.z.toFixed(2)})`];
+              }
+            },
+            displayColors: false, bodyFont: { size: 12 }, titleFont: { size: 12 }
+          }
+        },
+        scales: {
+          x: {
+            grid: { display: false }, border: { display: false },
+            ticks: {
+              color: '#888780', font: { size: 9 },
+              maxRotation: 0, autoSkip: true, maxTicksLimit: 14,
+              callback: function(val, idx) {
+                const lbl = labels[idx];
+                return lbl && lbl.endsWith('Q1') ? lbl.slice(0, 4) : '';
+              }
+            }
+          },
+          y: {
+            grid: { color: 'rgba(136,135,128,0.12)', drawTicks: false },
+            border: { display: false },
+            ticks: { color: '#888780', font: { size: 9 }, maxTicksLimit: 4,
+              callback: v => '$' + v.toFixed(0) + 'B' },
+            beginAtZero: true
+          }
+        },
+        layout: { padding: { top: 4, bottom: 0 } }
+      }
+    });
+    deployCharts.push({ chart, rows, baseColors });
+  });
+}
+
+function applyRegimeFilter() {
+  const checks = document.querySelectorAll('#regime-filter input[type="checkbox"]');
+  const enabled = new Set();
+  checks.forEach(cb => { if (cb.checked) enabled.add(cb.dataset.regime); });
+
+  const FADE_ALPHA = '14';
+  deployCharts.forEach(({ chart, rows, baseColors }) => {
+    const newColors = rows.map((r, i) => {
+      return enabled.has(r.regime) ? baseColors[i] : baseColors[i] + FADE_ALPHA;
+    });
+    chart.data.datasets[0].backgroundColor = newColors;
+    chart.update('none');
+  });
+}
+
+function wireRegimeFilter() {
+  const checks = document.querySelectorAll('#regime-filter input[type="checkbox"]');
+  checks.forEach(cb => cb.addEventListener('change', applyRegimeFilter));
+  document.getElementById('reset-filter').addEventListener('click', () => {
+    checks.forEach(cb => { cb.checked = true; });
+    applyRegimeFilter();
+  });
+}
+
+/* ===================== SECTION 2: line chart ===================== */
+function buildLineChart() {
+  const BANDS = [
+    { y0: 1.5,  y1: 10,   color: 'rgba(176,48,48,0.06)' },
+    { y0: 0.5,  y1: 1.5,  color: 'rgba(212,114,42,0.06)' },
+    { y0: -0.5, y1: 0.5,  color: 'rgba(136,135,128,0.04)' },
+    { y0: -1.5, y1: -0.5, color: 'rgba(58,123,191,0.06)' },
+    { y0: -10,  y1: -1.5, color: 'rgba(26,78,122,0.06)' }
+  ];
+  const regimeBands = {
+    id: 'regimeBands',
+    beforeDatasetsDraw(chart) {
+      const { ctx, chartArea, scales } = chart;
+      const y = scales.y;
+      BANDS.forEach(b => {
+        const top = y.getPixelForValue(b.y1);
+        const bottom = y.getPixelForValue(b.y0);
+        ctx.fillStyle = b.color;
+        ctx.fillRect(chartArea.left, top, chartArea.right - chartArea.left, bottom - top);
+      });
+    }
+  };
+
+  const labels = DATA.line.labels;
+  new Chart(document.getElementById('line-chart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: STAGES.map(s => ({
+        label: s,
+        data: DATA.line[s],
+        borderColor: LINE_COLORS[s],
+        backgroundColor: LINE_COLORS[s],
+        borderWidth: 1.5,
+        pointRadius: 0,
+        pointHoverRadius: 4,
+        tension: 0.3
+      }))
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: ctx => ctx[0].label,
+            label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y >= 0 ? '+' : ''}${ctx.parsed.y.toFixed(2)}`
+          },
+          displayColors: true, bodyFont: { size: 12 }, titleFont: { size: 12 }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false }, border: { display: false },
+          ticks: {
+            color: '#888780', font: { size: 10 }, maxRotation: 0, autoSkip: true,
+            callback: function(val, idx) {
+              const lbl = labels[idx];
+              return lbl && lbl.endsWith('Q1') ? lbl.slice(0, 4) : '';
+            }
+          }
+        },
+        y: {
+          grid: { color: 'rgba(136,135,128,0.12)', drawTicks: false },
+          border: { display: false },
+          ticks: { color: '#888780', font: { size: 10 }, stepSize: 1,
+            callback: v => (v > 0 ? '+' : '') + v.toFixed(1) },
+          min: -2.5, max: 4,
+          title: { display: true, text: 'composite z-score', font: { size: 11 }, color: '#888780' }
+        }
+      }
+    },
+    plugins: [regimeBands]
+  });
+}
+
+/* ===================== SECTION 3: companies list with tooltips ===================== */
+function formatDate(iso) {
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+function formatSize(m) {
+  if (m < 1) return '$' + (m * 1000).toFixed(0) + 'K';
+  if (m < 1000) return '$' + m.toLocaleString('en-US', { maximumFractionDigits: 1 }) + 'M';
+  return '$' + (m / 1000).toLocaleString('en-US', { maximumFractionDigits: 2 }) + 'B';
+}
+
+function buildCompanyList() {
+  const grid = document.getElementById('company-grid');
+  const tooltip = document.getElementById('tooltip');
+  const companies = DATA.companies;
+  const N = companies.length;
+  const COLS = 4;
+  const rowsPerCol = Math.ceil(N / COLS);
+
+  document.getElementById('count').textContent = N;
+
+  function buildTT(company) {
+    const rounds = DATA.funding[company];
+    let html = `<div class="tt-header">${company}</div>`;
+    if (!rounds || rounds.length === 0) {
+      html += '<div class="tt-empty">No funding round data available</div>';
+      return html;
+    }
+    rounds.forEach(r => {
+      html += `<div class="tt-row"><span class="tt-date">${formatDate(r.date)}</span><span class="tt-stage">${r.stage}</span><span class="tt-size">${formatSize(r.size)}</span></div>`;
+    });
+    return html;
+  }
+
+  function positionTT(row) {
+    const rect = row.getBoundingClientRect();
+    const tt = tooltip.getBoundingClientRect();
+    const vw = window.innerWidth, vh = window.innerHeight, m = 8;
+    let left = rect.right + 12;
+    if (left + tt.width + m > vw) left = rect.left - tt.width - 12;
+    if (left < m) left = Math.max(m, rect.left);
+    let top = rect.top;
+    if (top + tt.height + m > vh) top = vh - tt.height - m;
+    if (top < m) top = m;
+    tooltip.style.left = left + 'px';
+    tooltip.style.top = top + 'px';
+  }
+
+  function show(row, co) {
+    tooltip.innerHTML = buildTT(co);
+    tooltip.classList.add('visible');
+    positionTT(row);
+  }
+  function hide() { tooltip.classList.remove('visible'); }
+
+  let active = null;
+  for (let c = 0; c < COLS; c++) {
+    const col = document.createElement('div');
+    const start = c * rowsPerCol;
+    const end = Math.min(start + rowsPerCol, N);
+    for (let i = start; i < end; i++) {
+      const company = companies[i];
+      const row = document.createElement('div');
+      row.className = 'co';
+      if (DATA.funding[company] && DATA.funding[company].length > 0) row.classList.add('has-data');
+      const num = document.createElement('span');
+      num.className = 'num';
+      num.textContent = (i + 1) + '.';
+      const name = document.createElement('span');
+      name.className = 'name';
+      name.textContent = company;
+      row.appendChild(num); row.appendChild(name);
+      row.addEventListener('mouseenter', () => show(row, company));
+      row.addEventListener('mouseleave', hide);
+      row.addEventListener('click', e => {
+        e.stopPropagation();
+        if (active === row) { hide(); active = null; }
+        else { show(row, company); active = row; }
+      });
+      col.appendChild(row);
+    }
+    grid.appendChild(col);
+  }
+  document.addEventListener('click', e => {
+    if (active && !active.contains(e.target) && !tooltip.contains(e.target)) { hide(); active = null; }
+  });
+  window.addEventListener('scroll', () => {
+    if (tooltip.classList.contains('visible') && active) positionTT(active);
+  }, true);
+}
+
+/* ===================== SECTION 4: outcome bar charts (stacked per-round, outliers faded) ===================== */
+function buildOutcomeCharts() {
+  const container = document.getElementById('outcome-charts');
+  const OUTLIER_ALPHA = '40';
+
+  STAGES.forEach(stage => {
+    const rows = DATA.outcome[stage];
+    const stacked = DATA.stacked[stage] || {};
+    const fence = DATA.fences[stage];
+    const labels = rows.map(r => r.period);
+
+    // Build per-quarter metadata: regime, z, is_outlier, rounds list
+    const qtrMeta = rows.map(r => ({
+      period: r.period,
+      regime: r.regime,
+      z: r.z,
+      total: r.outcome_m,
+      rounds: (stacked[r.period] || []).slice(),
+      isOutlier: r.outcome_m > fence
+    }));
+
+    // Determine max number of rounds in any single quarter (dataset count)
+    let maxSegments = 0;
+    qtrMeta.forEach(q => { if (q.rounds.length > maxSegments) maxSegments = q.rounds.length; });
+    if (maxSegments === 0) maxSegments = 1;
+
+    // Build one dataset per segment index. Each dataset's data[i] is the size of
+    // the k-th round in quarter i (or 0 if that quarter doesn't have that many rounds).
+    const datasets = [];
+    for (let k = 0; k < maxSegments; k++) {
+      const values = qtrMeta.map(q => q.rounds[k] ? q.rounds[k].size : null);
+      const colors = qtrMeta.map(q => {
+        const base = REGIME_COLOR[q.regime];
+        return q.isOutlier ? base + OUTLIER_ALPHA : base;
+      });
+      datasets.push({
+        data: values,
+        backgroundColor: colors,
+        borderWidth: 0.5,
+        borderColor: 'rgba(255,255,255,0.6)',
+        borderSkipped: false,
+        barPercentage: 0.85,
+        categoryPercentage: 0.95,
+        stack: 'q',
+        segIndex: k
+      });
+    }
+    // Reverse the stacking order so that the FIRST (largest) round sits at the bottom
+    // Chart.js stacks in dataset order from bottom up, so we want dataset 0 = largest.
+    // Our rounds are already sorted largest-first, so dataset 0 = largest = bottom. Good.
+
+    const maxY = niceCeil(Math.max(...qtrMeta.map(q => q.total)) * 1.08);
+
+    const wrap = document.createElement('div');
+    wrap.className = 'stage-wrap';
+    const lbl = document.createElement('div');
+    lbl.className = 'stage-label';
+    lbl.textContent = stage;
+    wrap.appendChild(lbl);
+    const cw = document.createElement('div');
+    cw.className = 'chart-wrap tall';
+    const canvas = document.createElement('canvas');
+    canvas.setAttribute('role', 'img');
+    canvas.setAttribute('aria-label', stage + ' quarterly outcome dollars stacked by individual round');
+    canvas.textContent = stage + ' outcome dollars stacked by round.';
+    cw.appendChild(canvas);
+    wrap.appendChild(cw);
+    container.appendChild(wrap);
+
+    new Chart(canvas, {
+      type: 'bar',
+      data: { labels, datasets },
+      options: {
+        responsive: true, maintainAspectRatio: false, animation: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            filter: item => item.raw != null && item.raw > 0,
+            callbacks: {
+              title: ctx => ctx[0].label,
+              label: ctx => {
+                const qtr = qtrMeta[ctx.dataIndex];
+                const k = ctx.dataset.segIndex;
+                const r = qtr.rounds[k];
+                if (!r) return '';
+                const dateFmt = new Date(r.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                const szFmt = r.size < 1000 ? `$${r.size.toLocaleString('en-US', { maximumFractionDigits: 1 })}M` : `$${(r.size/1000).toLocaleString('en-US', { maximumFractionDigits: 2 })}B`;
+                const lines = [`${r.company} — ${r.stage}`, `${dateFmt} · ${szFmt}`];
+                const segNum = k + 1;
+                const total = qtr.rounds.length;
+                if (total > 1) lines.push(`Round ${segNum} of ${total} · quarter total $${qtr.total.toLocaleString('en-US', { maximumFractionDigits: 1 })}M`);
+                if (qtr.isOutlier) lines.push('Tukey outlier quarter');
+                return lines;
+              }
+            },
+            displayColors: false, bodyFont: { size: 12 }, titleFont: { size: 12 }
+          }
+        },
+        scales: {
+          x: {
+            stacked: true,
+            grid: { display: false }, border: { display: false },
+            ticks: {
+              color: '#888780', font: { size: 9 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 14,
+              callback: function(val, idx) {
+                const lbl = labels[idx];
+                return lbl && lbl.endsWith('Q1') ? lbl.slice(0, 4) : '';
+              }
+            }
+          },
+          y: {
+            stacked: true,
+            grid: { color: 'rgba(136,135,128,0.12)', drawTicks: false },
+            border: { display: false },
+            ticks: { color: '#888780', font: { size: 9 }, maxTicksLimit: 4,
+              callback: v => '$' + v.toLocaleString('en-US') + 'M' },
+            beginAtZero: true, max: maxY
+          }
+        },
+        layout: { padding: { top: 4, bottom: 0 } }
+      }
+    });
+  });
+}
+
+/* ===================== SECTION 5: scatter plots ===================== */
+function linReg(pts) {
+  const n = pts.length;
+  const xs = pts.map(p => p[1]);
+  const ys = pts.map(p => p[2]);
+  const mx = xs.reduce((a, b) => a + b) / n;
+  const my = ys.reduce((a, b) => a + b) / n;
+  const num = xs.reduce((s, x, i) => s + (x - mx) * (ys[i] - my), 0);
+  const den = xs.reduce((s, x) => s + (x - mx) ** 2, 0);
+  const slope = num / den;
+  const intercept = my - slope * mx;
+  return { slope, intercept };
+}
+
+function buildScatterGrid() {
+  const container = document.getElementById('scatter-grid');
+  STAGES.forEach(stage => {
+    const pts = DATA.scatter[stage];
+    const fence = DATA.fences[stage];
+    const ordinary = pts.filter(p => p[2] <= fence);
+    const outliers = pts.filter(p => p[2] > fence);
+    const { slope, intercept } = linReg(pts);
+    const xs = pts.map(p => p[1]);
+    const minX = Math.min(...xs) - 0.15;
+    const maxX = Math.max(...xs) + 0.15;
+    const trend = [
+      { x: minX, y: intercept + slope * minX },
+      { x: maxX, y: intercept + slope * maxX }
+    ];
+    const maxY = niceCeil(Math.max(...pts.map(p => p[2])) * 1.08);
+    const color = STAGE_COLORS[stage];
+
+    const wrap = document.createElement('div');
+    wrap.className = 'scatter-section';
+    const lbl = document.createElement('div');
+    lbl.className = 'scatter-lbl';
+    lbl.textContent = stage;
+    wrap.appendChild(lbl);
+    const cw = document.createElement('div');
+    cw.className = 'scatter-wrap';
+    const canvas = document.createElement('canvas');
+    canvas.setAttribute('role', 'img');
+    canvas.setAttribute('aria-label', stage + ' scatter of composite score vs outcome dollars');
+    canvas.textContent = stage + ' scatter.';
+    cw.appendChild(canvas);
+    wrap.appendChild(cw);
+    container.appendChild(wrap);
+
+    new Chart(canvas, {
+      data: {
+        datasets: [
+          {
+            type: 'scatter', label: 'Ordinary',
+            data: ordinary.map(p => ({ x: p[1], y: p[2], period: p[0] })),
+            backgroundColor: color + '66',
+            borderColor: color, borderWidth: 0.5,
+            pointRadius: 4, pointHoverRadius: 5.5
+          },
+          {
+            type: 'scatter', label: 'Outliers',
+            data: outliers.map(p => ({ x: p[1], y: p[2], period: p[0] })),
+            backgroundColor: 'transparent',
+            borderColor: color, borderWidth: 1.8,
+            pointRadius: 5.5, pointHoverRadius: 7
+          },
+          {
+            type: 'line', label: 'Trend',
+            data: trend,
+            borderColor: color, borderWidth: 1.5, borderDash: [4, 3],
+            pointRadius: 0, fill: false, tension: 0
+          }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, animation: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            filter: item => item.datasetIndex < 2,
+            callbacks: {
+              title: ctx => ctx[0].raw.period || '',
+              label: ctx => {
+                const y = ctx.parsed.y;
+                const lines = [`score: ${ctx.parsed.x.toFixed(2)}`, y === 0 ? '$0' : `$${y.toLocaleString('en-US', {maximumFractionDigits: 1})}M`];
+                if (ctx.datasetIndex === 1) lines.push('Tukey outlier');
+                return lines;
+              }
+            },
+            displayColors: false
+          }
+        },
+        scales: {
+          x: {
+            title: { display: true, text: 'composite z-score', font: { size: 11 }, color: '#888780' },
+            grid: { color: 'rgba(136,135,128,0.1)' },
+            border: { display: false },
+            ticks: { color: '#888780', font: { size: 10 }, maxTicksLimit: 8 }
+          },
+          y: {
+            title: { display: true, text: '$5B+ outcome dollars ($M)', font: { size: 11 }, color: '#888780' },
+            grid: { color: 'rgba(136,135,128,0.1)' },
+            border: { display: false },
+            ticks: { color: '#888780', font: { size: 10 }, maxTicksLimit: 5,
+              callback: v => '$' + v.toLocaleString('en-US') + 'M' },
+            min: 0, max: maxY
+          }
+        },
+        layout: { padding: { top: 4, right: 8, bottom: 0, left: 0 } }
+      }
+    });
+  });
+}
+
+/* ===================== SECTION 6: statistics table ===================== */
+function classifySig(p_pearson, p_spearman) {
+  const best = Math.min(p_pearson, p_spearman);
+  if (best < 0.01) return { cls: 'sig', text: 'p < 0.01' };
+  if (best < 0.05) return { cls: 'sig', text: 'p < 0.05' };
+  if (best < 0.10) return { cls: 'marginal', text: 'marginal' };
+  return { cls: 'insig', text: 'not sig.' };
+}
+
+function pClass(p) {
+  if (p < 0.05) return 'p-sig';
+  if (p < 0.10) return 'p-marg';
+  return '';
+}
+
+function signClass(v) { return v < 0 ? 'neg' : 'pos'; }
+function fmtR(v) { return (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(3); }
+
+function buildStatsTable() {
+  // Outlier list
+  const ol = document.getElementById('outlier-list');
+  DATA.stats.forEach(s => {
+    if (s.outliers.length === 0) return;
+    const li = document.createElement('li');
+    const olStr = s.outliers.map(o => `${o[0]} ($${o[1].toLocaleString('en-US')}M)`).join(', ');
+    li.innerHTML = `${s.stage} (${s.outliers.length} removed, fence $${s.fence.toLocaleString('en-US')}M): <span>${olStr}</span>`;
+    ol.appendChild(li);
+  });
+
+  // Stats table rows
+  const tbody = document.getElementById('stats-tbody');
+  DATA.stats.forEach(s => {
+    const sigFull = classifySig(s.p_full, s.ps_full);
+    const sigTrim = classifySig(s.p_trim, s.ps_trim);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="stage-name">${s.stage}</td>
+      <td>${s.n_full}</td>
+      <td class="${signClass(s.r_full)}">${fmtR(s.r_full)}</td>
+      <td class="${pClass(s.p_full)}">${s.p_full.toFixed(4)}</td>
+      <td class="${signClass(s.rs_full)}">${fmtR(s.rs_full)}</td>
+      <td class="${pClass(s.ps_full)}">${s.ps_full.toFixed(4)}</td>
+      <td class="divider-col"><span class="badge ${sigFull.cls}">${sigFull.text}</span></td>
+      <td>${s.n_trim}</td>
+      <td class="${signClass(s.r_trim)}">${fmtR(s.r_trim)}</td>
+      <td class="${pClass(s.p_trim)}">${s.p_trim.toFixed(4)}</td>
+      <td class="${signClass(s.rs_trim)}">${fmtR(s.rs_trim)}</td>
+      <td class="${pClass(s.ps_trim)}">${s.ps_trim.toFixed(4)}</td>
+      <td><span class="badge ${sigTrim.cls}">${sigTrim.text}</span></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+/* Init all sections */
+buildDeployCharts();
+wireRegimeFilter();
+buildLineChart();
+buildCompanyList();
+buildOutcomeCharts();
+buildScatterGrid();
+buildStatsTable();
+</script>
+</body>
+</html>
